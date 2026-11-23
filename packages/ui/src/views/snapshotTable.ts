@@ -2,6 +2,7 @@ import {
   type CustomFieldDef,
   type FlatTask,
   applyTaskFilterFlat,
+  customOptionLabel,
   dueUrgency,
   effectiveCustomValue,
   flattenTasks,
@@ -97,6 +98,7 @@ function customFieldValue(model: ViewModel, cf: CustomFieldDef, val: unknown): C
   if (cf.type === 'checkbox') return { kind: 'checkbox', checked: Boolean(val) }
   if (cf.type === 'url') return { kind: 'url', url: values.join(', ') }
   if (cf.type === 'date') return { kind: 'text', text: values.map((v) => formatDateLong(v) || v).join(', ') }
+  if (cf.numbered) return { kind: 'text', text: values.map((v) => customOptionLabel(cf, v)).join(', ') }
   return { kind: 'text', text: val !== undefined ? stringifyCustomValue(val) : '' }
 }
 

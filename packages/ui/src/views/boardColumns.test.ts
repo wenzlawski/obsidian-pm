@@ -78,3 +78,22 @@ describe('boardColumns', () => {
     expect(groupableFields(setup)).toEqual(['status', 'priority', 'assignee', 'tag', 'type', 'cf:client'])
   })
 })
+
+describe('boardColumns of a numbered select', () => {
+  const numbered: FilterSetup = {
+    ...setup,
+    ctx: {
+      ...setup.ctx,
+      customFields: [{ id: 'client', name: 'Client', type: 'select', options: ['Globex', 'Acme'], numbered: true }]
+    }
+  }
+
+  it('labels each column with its place in the list and keeps the plain option as its id', () => {
+    const columns = boardColumns(numbered, { field: 'cf:client' }, tasks)
+    expect(columns.map((c) => [c.id, c.label])).toEqual([
+      ['Globex', '1. Globex'],
+      ['Acme', '2. Acme'],
+      ['', 'No Client']
+    ])
+  })
+})

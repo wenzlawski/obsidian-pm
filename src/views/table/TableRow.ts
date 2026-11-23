@@ -7,6 +7,7 @@ import {
   inheritedShare,
   isTerminalStatus,
   stringifyCustomValue,
+  customOptionLabel,
   type CustomFieldDef,
   type Project,
   totalLoggedHours
@@ -218,6 +219,7 @@ function customFieldValue(app: App, cf: CustomFieldDef, val: unknown, sourcePath
   if (values.some((v) => WIKILINK.test(v.trim()))) {
     return { kind: 'links', links: linkedRefs(app, values, sourcePath) }
   }
+  if (cf.numbered) return { kind: 'text', text: values.map((v) => customOptionLabel(cf, v)).join(', ') }
   return { kind: 'text', text: val !== undefined ? stringifyCustomValue(val) : '' }
 }
 

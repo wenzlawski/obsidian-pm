@@ -169,9 +169,37 @@
   gap: 4px;
   margin-top: 4px;
 }
+.pm-cf-numbered {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--font-ui-small);
+  color: var(--text-muted);
+}
+.pm-cf-opt-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .pm-cf-opt-row {
   display: flex;
   gap: 6px;
+  align-items: center;
+}
+.pm-cf-opt-row.is-dragging {
+  opacity: 0.5;
+}
+.pm-cf-opt-grip {
+  display: inline-flex;
+  color: var(--text-faint);
+  cursor: grab;
+  --icon-size: 14px;
+}
+.pm-cf-opt-num {
+  min-width: 2ch;
+  text-align: end;
+  color: var(--text-faint);
+  font-variant-numeric: tabular-nums;
 }
 .pm-cf-opt-input {
   flex: 1;

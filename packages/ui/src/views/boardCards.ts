@@ -1,6 +1,7 @@
 import {
   type CustomFieldDef,
   type Task,
+  customOptionLabel,
   effectiveCustomValue,
   flattenTasks,
   formatDateLong,
@@ -47,7 +48,11 @@ export function cardCustomValues(
           : ''
         : cf.type === 'date'
           ? list.map((value) => formatDateLong(value) || value).join(', ')
-          : list.map((value) => value.replace(/^\[\[(?:[^|\]]*\|)?([^\]]*)\]\]$/, '$1')).join(', ')
+          : list
+              .map((value) =>
+                customOptionLabel(cf, value).replace(/^((?:\d+\. )?)\[\[(?:[^|\]]*\|)?([^\]]*)\]\]$/, '$1$2')
+              )
+              .join(', ')
     if (text) values[id] = { name: cf.name, text, inherited: inheritedShare(task, cf.id) }
   }
   return values

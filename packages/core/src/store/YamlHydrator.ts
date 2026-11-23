@@ -67,6 +67,7 @@ export function customFieldList(raw: unknown): CustomFieldDef[] {
     }
     const options = stringList(f.options)
     if (options.length) field.options = options
+    if (f.numbered === true) field.numbered = true
     if (typeof f.icon === 'string' && f.icon) field.icon = f.icon
     if (f.filterable === false) field.filterable = false
     fields.push(field)

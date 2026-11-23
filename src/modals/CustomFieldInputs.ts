@@ -1,5 +1,13 @@
 import type PMPlugin from '#main'
-import { type Project, type Task, type CustomFieldDef, collectAllAssignees, stringifyCustomValue, t } from '@dotpm/core'
+import {
+  type Project,
+  type Task,
+  type CustomFieldDef,
+  collectAllAssignees,
+  customOptionLabel,
+  stringifyCustomValue,
+  t
+} from '@dotpm/core'
 import { Checkbox, renderDateControl, renderInputControl, renderMultiSelect, renderSelectControl } from '@dotpm/ui'
 import { renderPersonPicker } from '#ui/PersonPicker'
 
@@ -49,7 +57,7 @@ export function renderCustomFieldInput(
         value: stringifyCustomValue(value) || null,
         options: [
           { id: '', label: t('common.none') },
-          ...(cf.options ?? []).map((option) => ({ id: option, label: option }))
+          ...(cf.options ?? []).map((option) => ({ id: option, label: customOptionLabel(cf, option) }))
         ],
         onChange: commit
       })
@@ -65,7 +73,8 @@ export function renderCustomFieldInput(
         addLabel: t('customField.addValue'),
         addLabelMore: t('common.addAnother'),
         selected: picked,
-        options: () => (cf.options ?? []).map((option) => ({ id: option, label: option })),
+        labelFor: (option) => customOptionLabel(cf, option),
+        options: () => (cf.options ?? []).map((option) => ({ id: option, label: customOptionLabel(cf, option) })),
         add: (option) => {
           task.customFields[cf.id] = [...picked(), option]
         },
