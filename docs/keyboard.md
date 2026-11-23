@@ -31,7 +31,7 @@ shortcuts sheet leaves it out.
 | `s` / `Shift+S` | Next / previous status |
 | `p` / `Shift+P` | Next / previous priority |
 | `a` | Assign people |
-| `d` | Set the due date |
+| `d` / `Shift+D` | Set the due date / the start date |
 | `#` | Add or clear tags |
 | `m` | Move to a project, set a parent, or remove it |
 | `Mod+D` | Duplicate |

@@ -33,6 +33,26 @@ describe('keymap', () => {
     }
   })
 
+  it('sets the start date on Shift+D beside d for the due date, on tasks only', () => {
+    for (const context of ['table', 'board', 'timeline'] as const) {
+      expect(resolveAction(context, 'd')).toBe('due')
+      expect(resolveAction(context, 'Shift+d')).toBe('startDate')
+    }
+    expect(resolveAction('projects', 'Shift+d')).toBeNull()
+    expect(actionLabel('startDate', 'table')).toBe('Set start date')
+  })
+
+  it('needs a target for the start date as it does for the due date', () => {
+    const surface = (activeId: string | null): KeyboardSurface => ({
+      context: 'table',
+      groups: () => [['a']],
+      activeId: () => activeId,
+      setActive: () => {}
+    })
+    expect(isActionAvailable('startDate', surface('a'))).toBe(true)
+    expect(isActionAvailable('startDate', surface(null))).toBe(false)
+  })
+
   it('resolves the punctuation aliases', () => {
     expect(resolveAction('table', '?')).toBe('help')
     expect(resolveAction('table', '/')).toBe('search')

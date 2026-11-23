@@ -222,7 +222,13 @@ function askParent(ctx: TaskActionContext, entries: TaskEntry[]): void {
   })
 }
 
-function askDueDate(ctx: TaskActionContext, entries: TaskEntry[]): void {
+interface DateAsk {
+  field: 'due' | 'start'
+  title: string
+  clearLabel: string
+}
+
+function askDate(ctx: TaskActionContext, entries: TaskEntry[], { field, title, clearLabel }: DateAsk): void {
   const now = today()
   const ahead = (days: number): string => now.add({ days }).toString()
   const choices: Choice<string>[] = [
@@ -231,27 +237,27 @@ function askDueDate(ctx: TaskActionContext, entries: TaskEntry[]): void {
     { label: t('bulk.inOneWeek', { date: ahead(7) }), value: ahead(7) },
     { label: t('bulk.inTwoWeeks', { date: ahead(14) }), value: ahead(14) },
     { label: t('bulk.pickDate'), value: '__pick' },
-    { label: t('bulk.clearDueDate'), value: '' }
+    { label: clearLabel, value: '' }
   ]
-  const apply = (due: string): void => {
+  const apply = (date: string): void => {
     ctx.enqueue(() =>
       patchTasks(
         ctx,
         entries,
-        () => ({ due }),
+        () => ({ [field]: date }),
         async (changed) => {
           for (const { project, task } of changed) await ctx.plugin.store.scheduleAfterChange(project, task.id)
         }
       )
     )
   }
-  openChoice(ctx.plugin.app, t('keyboard.due'), choices, (value) => {
+  openChoice(ctx.plugin.app, title, choices, (value) => {
     if (value !== '__pick') {
       apply(value)
       return
     }
     void safeAsync(async () => {
-      const typed = await promptText(ctx.plugin.app, t('keyboard.due'), 'YYYY-MM-DD', now.toString())
+      const typed = await promptText(ctx.plugin.app, title, 'YYYY-MM-DD', now.toString())
       if (typed === null) return
       const date = parsePlainDate(typed.trim())
       if (!date) {
@@ -408,7 +414,16 @@ export function taskActionHandlers(ctx: TaskActionContext): ActionHandlers {
 
     due: () => {
       const entries = targetEntries(ctx)
-      if (entries.length) askDueDate(ctx, entries)
+      if (entries.length) {
+        askDate(ctx, entries, { field: 'due', title: t('keyboard.due'), clearLabel: t('bulk.clearDueDate') })
+      }
+    },
+
+    startDate: () => {
+      const entries = targetEntries(ctx)
+      if (entries.length) {
+        askDate(ctx, entries, { field: 'start', title: t('keyboard.start'), clearLabel: t('bulk.clearStartDate') })
+      }
     },
 
     tags: () => {

@@ -26,6 +26,7 @@ export type ActionId =
   | 'priorityPrev'
   | 'assign'
   | 'due'
+  | 'startDate'
   | 'tags'
   | 'move'
   | 'duplicate'
@@ -95,6 +96,7 @@ export const ACTION_LABELS: Record<ActionId, MessageKey> = {
   priorityPrev: 'keyboard.priorityPrev',
   assign: 'keyboard.assign',
   due: 'keyboard.due',
+  startDate: 'keyboard.start',
   tags: 'keyboard.tags',
   move: 'keyboard.move',
   duplicate: 'taskMenu.duplicate',
@@ -163,6 +165,7 @@ export const ACTION_SECTIONS: Record<ActionId, KeyboardSection> = {
   priorityPrev: 'tasks',
   assign: 'tasks',
   due: 'tasks',
+  startDate: 'tasks',
   tags: 'tasks',
   move: 'tasks',
   duplicate: 'tasks',
@@ -214,6 +217,7 @@ const TASK_ACTIONS: Binding[] = [
   { keys: ['Shift+P'], action: 'priorityPrev' },
   { keys: ['a'], action: 'assign' },
   { keys: ['d'], action: 'due' },
+  { keys: ['Shift+D'], action: 'startDate' },
   { keys: ['#'], action: 'tags' },
   { keys: ['m'], action: 'move' },
   { keys: ['Mod+D'], action: 'duplicate' },
@@ -308,6 +312,7 @@ const NEEDS_TARGET = new Set<ActionId>([
   'priorityPrev',
   'assign',
   'due',
+  'startDate',
   'tags',
   'move',
   'archive',
