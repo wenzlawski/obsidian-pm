@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Subtasks in the task editor can be reordered by dragging, or with Alt+Up and Alt+Down on a subtask's grip
 - The task name column in the table can now be resized
 
 ### Fixed

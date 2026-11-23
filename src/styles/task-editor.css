@@ -426,6 +426,20 @@ button.pm-icon-trigger {
   border: 1px dashed var(--background-modifier-border);
   border-radius: var(--checkbox-radius);
 }
+.pm-subtask-grip {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 14px;
+  color: var(--text-faint);
+  cursor: grab;
+  --icon-size: 14px;
+}
+.pm-subtask-add-row .pm-subtask-grip {
+  cursor: default;
+}
+.pm-modal-subtask-row.is-dragging {
+  opacity: 0.5;
+}
 .pm-subtask-add-input {
   flex: 1;
   min-width: 0;
