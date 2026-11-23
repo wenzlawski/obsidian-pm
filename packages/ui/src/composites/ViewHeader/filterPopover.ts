@@ -13,6 +13,7 @@ import {
   BUILTIN_FILTER_FIELDS,
   OPS_BY_KIND,
   customFilterField,
+  customOptionLabel,
   displayName,
   filterFieldIcon,
   filterFieldLabel,
@@ -91,7 +92,9 @@ export function valueOptions(setup: FilterSetup, field: string): ValueOption[] {
   }
   const seen = new Map<string, ValueOption>()
   const custom = ctx.customFields.find((cf) => customFilterField(cf.id) === field)
-  for (const option of custom?.options ?? []) seen.set(option, { id: option, label: option })
+  for (const option of custom?.options ?? []) {
+    seen.set(option, { id: option, label: custom ? customOptionLabel(custom, option) : option })
+  }
   const isPerson = field === 'assignee' || custom?.type === 'person'
   for (const task of setup.tasks) {
     const value = filterValue(task, field, ctx)

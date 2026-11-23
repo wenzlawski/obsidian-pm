@@ -10,6 +10,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The task name column in the table can now be resized
+- Options of a select or multi-select custom field can be reordered by dragging, or with Alt+Up and Alt+Down
+- A select or multi-select custom field can number its options automatically ("1. Draft"). The numbers follow the list when you add, remove or reorder options, and tasks keep the plain option as their value
 
 ### Fixed
 

@@ -1,4 +1,7 @@
 import { type CustomFieldDef, CUSTOM_FIELD_TYPES, makeId, t } from '@dotpm/core'
+import { makeReorderable } from './dom'
+import { setIcon } from './platform'
+import { Checkbox } from './primitives/Checkbox'
 import { IconButton } from './primitives/IconButton'
 import { renderAddButton } from './composites/addButton'
 
@@ -103,16 +106,46 @@ export function renderCustomFieldOptions(parent: HTMLElement, field: CustomField
   const options = field.options ?? []
   field.options = options
   const optionsWrap = parent.createDiv('pm-cf-options')
-  const drawOptions = (): void => {
-    optionsWrap.empty()
+
+  const numbered = optionsWrap.createEl('label', { cls: 'pm-cf-numbered' })
+  new Checkbox(numbered).setChecked(field.numbered === true).onChange((checked) => {
+    if (checked) field.numbered = true
+    else delete field.numbered
+    onChanged()
+    drawOptions()
+  })
+  numbered.createSpan({ text: t('customField.numbered') })
+
+  const list = optionsWrap.createDiv('pm-cf-opt-list')
+  const move = (from: number, to: number): void => {
+    if (to < 0 || to >= options.length || from === to) return
+    const [moved] = options.splice(from, 1)
+    options.splice(to, 0, moved)
+    onChanged()
+    drawOptions(to)
+  }
+  const drawOptions = (focus?: number): void => {
+    list.empty()
+    const rows: { el: HTMLElement; id: string }[] = []
     options.forEach((option, i) => {
-      const optionRow = optionsWrap.createDiv('pm-cf-opt-row')
+      const optionRow = list.createDiv('pm-cf-opt-row')
+      setIcon(optionRow.createSpan('pm-cf-opt-grip'), 'grip-vertical')
+      if (field.numbered) optionRow.createSpan({ cls: 'pm-cf-opt-num', text: `${i + 1}.` })
       const input = optionRow.createEl('input', { type: 'text', value: option, cls: 'pm-input pm-cf-opt-input' })
       input.placeholder = t('customField.option', { index: i + 1 })
       input.addEventListener('change', () => {
         options[i] = input.value
         onChanged()
       })
+      input.addEventListener('keydown', (e) => {
+        if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return
+        e.preventDefault()
+        e.stopPropagation()
+        // Keep an edit made before the move; the change event hasn't fired yet.
+        options[i] = input.value
+        move(i, e.key === 'ArrowUp' ? i - 1 : i + 1)
+      })
+      if (i === focus) input.focus()
       new IconButton(optionRow)
         .setIcon('x')
         .setTooltip(t('customField.removeOption'))
@@ -121,11 +154,20 @@ export function renderCustomFieldOptions(parent: HTMLElement, field: CustomField
           onChanged()
           drawOptions()
         })
+      rows.push({ el: optionRow, id: String(i) })
     })
-    renderAddButton(optionsWrap, t('customField.addOption'), () => {
-      options.push('')
-      drawOptions()
-    })
+    if (rows.length > 1) {
+      makeReorderable(rows, (ids) => {
+        const reordered = ids.map((id) => options[Number(id)])
+        options.splice(0, options.length, ...reordered)
+        onChanged()
+        drawOptions()
+      })
+    }
   }
   drawOptions()
+  renderAddButton(optionsWrap, t('customField.addOption'), () => {
+    options.push('')
+    drawOptions(options.length - 1)
+  })
 }

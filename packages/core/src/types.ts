@@ -53,6 +53,11 @@ export interface CustomFieldDef {
   name: string
   type: (typeof CUSTOM_FIELD_TYPES)[number]
   options?: string[] // for select / multiselect
+  /**
+   * Shows each option of a select / multiselect with its position ("1. Draft"). Only the label
+   * is numbered; tasks keep the plain option, so editing the list never rewrites their values.
+   */
+  numbered?: boolean
   icon?: string // emoji or lucide icon name
   /** False keeps the field out of the filter picker. */
   filterable?: boolean

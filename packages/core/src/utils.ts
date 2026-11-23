@@ -1,4 +1,12 @@
-import type { DueUrgency, Task, StatusConfig, PriorityConfig, TaskPriority, PriorityIconSet } from './types'
+import type {
+  CustomFieldDef,
+  DueUrgency,
+  Task,
+  StatusConfig,
+  PriorityConfig,
+  TaskPriority,
+  PriorityIconSet
+} from './types'
 import { HEX_COLOR, LOCAL_API_PORT_BASE, LOCAL_API_PORT_SPAN, PRIORITY_ICON_SETS } from './types'
 import { today, parsePlainDate } from './dates'
 import { locale } from './i18n'
@@ -109,6 +117,20 @@ export function stringifyCustomValue(val: unknown): string {
   if (typeof val === 'number' || typeof val === 'boolean') return String(val)
   if (Array.isArray(val)) return val.map((v) => String(v)).join(', ')
   return ''
+}
+
+/**
+ * How a select value is shown. A numbered field prefixes the option with its place in the
+ * list, so the number follows the option when the list is reordered or edited. A value that
+ * is no longer an option has no place and shows as it is.
+ */
+export function customOptionLabel(
+  field: Pick<CustomFieldDef, 'type' | 'options' | 'numbered'>,
+  option: string
+): string {
+  if (!field.numbered || (field.type !== 'select' && field.type !== 'multiselect')) return option
+  const index = field.options?.indexOf(option) ?? -1
+  return index < 0 ? option : `${index + 1}. ${option}`
 }
 
 export function sanitizeFileName(title: string): string {

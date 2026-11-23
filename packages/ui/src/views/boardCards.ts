@@ -1,4 +1,12 @@
-import { type CustomFieldDef, type Task, flattenTasks, formatDateLong, stringifyCustomValue, t } from '@dotpm/core'
+import {
+  type CustomFieldDef,
+  type Task,
+  customOptionLabel,
+  flattenTasks,
+  formatDateLong,
+  stringifyCustomValue,
+  t
+} from '@dotpm/core'
 import type { CardFieldValue } from '../composites/KanbanCard'
 
 /** The tasks a board deals cards for: the top-level ones, or every task once subtasks get cards of their own. */
@@ -38,7 +46,11 @@ export function cardCustomValues(
           : ''
         : cf.type === 'date'
           ? list.map((value) => formatDateLong(value) || value).join(', ')
-          : list.map((value) => value.replace(/^\[\[(?:[^|\]]*\|)?([^\]]*)\]\]$/, '$1')).join(', ')
+          : list
+              .map((value) =>
+                customOptionLabel(cf, value).replace(/^((?:\d+\. )?)\[\[(?:[^|\]]*\|)?([^\]]*)\]\]$/, '$1$2')
+              )
+              .join(', ')
     if (text) values[id] = { name: cf.name, text }
   }
   return values

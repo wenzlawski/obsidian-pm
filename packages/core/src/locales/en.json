@@ -100,6 +100,7 @@
   "customField.filterable": "Shown in filters",
   "customField.namePlaceholder": "Field name",
   "customField.notFilterable": "Hidden from filters",
+  "customField.numbered": "Number options automatically",
   "customField.option": "Option {index}",
   "customField.removeField": "Remove field",
   "customField.removeOption": "Remove option",

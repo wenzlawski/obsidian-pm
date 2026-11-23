@@ -1,10 +1,19 @@
 import { describe, expect, it } from 'vitest'
-import { dedupePeople, displayName, dueUrgency, localApiPortFor, priorityIcon, readColor } from './utils'
+import {
+  customOptionLabel,
+  dedupePeople,
+  displayName,
+  dueUrgency,
+  localApiPortFor,
+  priorityIcon,
+  readColor
+} from './utils'
 import {
   makeTask,
   DEFAULT_PRIORITIES,
   LOCAL_API_PORT_BASE,
   LOCAL_API_PORT_SPAN,
+  type CustomFieldDef,
   type PriorityConfig,
   type StatusConfig
 } from './types'
@@ -217,4 +226,38 @@ describe('readColor', () => {
       expect(readColor(raw)).toBeNull()
     }
   )
+})
+
+describe('customOptionLabel', () => {
+  const field: CustomFieldDef = { id: 'f', name: 'F', type: 'select', options: ['Draft', 'Review', 'Done'] }
+
+  it('leaves the option as it is unless the field is numbered', () => {
+    expect(customOptionLabel(field, 'Review')).toBe('Review')
+  })
+
+  it('prefixes a numbered option with its place in the list', () => {
+    expect(customOptionLabel({ ...field, numbered: true }, 'Draft')).toBe('1. Draft')
+    expect(customOptionLabel({ ...field, numbered: true }, 'Done')).toBe('3. Done')
+  })
+
+  it('renumbers when the list changes, without touching the option itself', () => {
+    const numbered: CustomFieldDef = {
+      id: 'f',
+      name: 'F',
+      type: 'multiselect',
+      options: ['Draft', 'Review', 'Done'],
+      numbered: true
+    }
+    const edited = { ...numbered, options: ['Draft', 'QA', 'Review', 'Done'] }
+    expect(customOptionLabel(edited, 'Review')).toBe('3. Review')
+    expect(customOptionLabel({ ...numbered, options: ['Done', 'Draft', 'Review'] }, 'Done')).toBe('1. Done')
+  })
+
+  it('shows a value that is no longer an option as it is', () => {
+    expect(customOptionLabel({ ...field, numbered: true }, 'Archived')).toBe('Archived')
+  })
+
+  it('ignores the flag on a field that is not a select', () => {
+    expect(customOptionLabel({ type: 'text', options: ['a'], numbered: true }, 'a')).toBe('a')
+  })
 })
