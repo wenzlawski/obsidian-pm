@@ -53,6 +53,15 @@ describe('keymap', () => {
     expect(isActionAvailable('startDate', surface(null))).toBe(false)
   })
 
+  it('moves a task up and down on Alt+Up and Alt+Down, in the table only', () => {
+    expect(resolveAction('table', 'Alt+ArrowUp')).toBe('moveUp')
+    expect(resolveAction('table', 'Alt+ArrowDown')).toBe('moveDown')
+    for (const context of ['board', 'timeline', 'projects', 'overview'] as const) {
+      expect(resolveAction(context, 'Alt+ArrowUp')).toBeNull()
+    }
+    expect(actionLabel('moveUp', 'table')).toBe('Move up')
+  })
+
   it('resolves the punctuation aliases', () => {
     expect(resolveAction('table', '?')).toBe('help')
     expect(resolveAction('table', '/')).toBe('search')
@@ -108,6 +117,12 @@ describe('isActionAvailable', () => {
     })
     expect(isActionAvailable('delete', selected)).toBe(true)
     expect(isActionAvailable('open', selected)).toBe(false)
+  })
+
+  it('needs a surface that can reorder, and an active task', () => {
+    expect(isActionAvailable('moveUp', surface())).toBe(false)
+    expect(isActionAvailable('moveUp', surface({ reorder: () => {} }))).toBe(true)
+    expect(isActionAvailable('moveDown', surface({ reorder: () => {}, activeId: () => null }))).toBe(false)
   })
 
   it('needs the surface to support expand and collapse', () => {

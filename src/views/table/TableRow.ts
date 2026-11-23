@@ -1,5 +1,6 @@
-import { Menu, type App } from 'obsidian'
+import { Menu, Notice, type App } from 'obsidian'
 import {
+  t,
   getStatusConfig,
   dueUrgency,
   effectiveCustomValue,
@@ -34,6 +35,7 @@ import { updateSelectCheckboxes, getVisibleTaskIds } from './TableRenderer'
 import type { TableContext, TableState, TableTreeRow } from './TableRenderer'
 import { openTaskModal } from '#ui/ModalFactory'
 import { buildTaskContextMenu } from '#ui/TaskContextMenu'
+import { reorderTask } from '#ui/reorderTask'
 import { toggleCollapsed } from '../collapse'
 import { linkedRefs } from '../linkedRefs'
 
@@ -56,6 +58,8 @@ export function renderTaskRow(tbody: HTMLElement, flat: TableTreeRow, ctx: Table
       updateSelectedRow(ctx.state)
     }
   })
+
+  wireRowReorder(row, flat, project, ctx)
 
   new SelectCell(row, {
     checked: ctx.state.selectedTaskIds.has(task.id),
@@ -174,6 +178,63 @@ export function renderTaskRow(tbody: HTMLElement, flat: TableTreeRow, ctx: Table
       menu.showAtMouseEvent(e)
     }
   })
+}
+
+const DROP_CLASSES = ['pm-table-row--drop-before', 'pm-table-row--drop-after'] as const
+
+/**
+ * Drag a row onto one of its siblings to put it there: above the sibling when dropped on its
+ * upper half, below when on its lower. A row can only be placed among its own siblings, so
+ * anywhere else it is dropped is refused.
+ */
+function wireRowReorder(row: HTMLElement, flat: TableTreeRow, project: Project, ctx: TableContext): void {
+  const { task } = flat
+  const { state } = ctx
+  const clear = () => row.removeClass(...DROP_CLASSES)
+  const accepts = () =>
+    state.dragged !== null &&
+    state.dragged.id !== task.id &&
+    state.dragged.project === project &&
+    state.dragged.parentId === flat.parentId
+
+  row.draggable = true
+  row.addEventListener('dragstart', (e) => {
+    state.dragged = { id: task.id, parentId: flat.parentId, project }
+    e.dataTransfer?.setData('text/plain', task.id)
+    if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move'
+    row.addClass('pm-table-row--dragging')
+  })
+  row.addEventListener('dragend', () => {
+    state.dragged = null
+    row.removeClass('pm-table-row--dragging')
+    state.tableBody?.querySelectorAll('.' + DROP_CLASSES.join(', .')).forEach((el) => el.removeClass(...DROP_CLASSES))
+  })
+  row.addEventListener('dragover', (e) => {
+    if (!accepts()) return
+    e.preventDefault()
+    const rect = row.getBoundingClientRect()
+    clear()
+    row.addClass(e.clientY < rect.top + rect.height / 2 ? DROP_CLASSES[0] : DROP_CLASSES[1])
+  })
+  row.addEventListener('dragleave', (e) => {
+    if (!row.contains(e.relatedTarget as Node | null)) clear()
+  })
+  row.addEventListener(
+    'drop',
+    safeAsync(async (e: DragEvent) => {
+      if (!accepts() || !state.dragged) return
+      e.preventDefault()
+      const position = row.hasClass(DROP_CLASSES[0]) ? 'before' : 'after'
+      const { id } = state.dragged
+      clear()
+      state.dragged = null
+      if (state.sort.length > 0) {
+        new Notice(t('table.reorderNeedsNoSort'))
+        return
+      }
+      if (await reorderTask(ctx.plugin, project, id, task.id, position)) await ctx.onRefresh()
+    })
+  )
 }
 
 function renderTitleCell(row: HTMLElement, flat: TableTreeRow, project: Project, ctx: TableContext): void {
