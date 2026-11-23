@@ -44,6 +44,57 @@ describe('select options editor', () => {
     expect(field.options).toEqual(['B', 'A', 'C'])
   })
 
+  describe('Enter in an option', () => {
+    const press = (input: HTMLInputElement, init: KeyboardEventInit = {}): KeyboardEvent => {
+      const event = new KeyboardEvent('keydown', { key: 'Enter', cancelable: true, ...init })
+      input.dispatchEvent(event)
+      return event
+    }
+    const inputAt = (rows: () => HTMLElement[], i: number): HTMLInputElement => {
+      const el = rows()[i].querySelector<HTMLInputElement>('input')
+      if (!el) throw new Error('no input')
+      return el
+    }
+
+    it('keeps what was typed and opens a new option after it, focused', () => {
+      const { field, onChanged, rows, values } = setup()
+      const first = inputAt(rows, 0)
+      first.value = 'Alpha'
+      expect(press(first).defaultPrevented).toBe(true)
+      expect(field.options).toEqual(['Alpha', '', 'B', 'C'])
+      expect(values()).toEqual(['Alpha', '', 'B', 'C'])
+      expect(document.activeElement).toBe(inputAt(rows, 1))
+      expect(onChanged).toHaveBeenCalledTimes(1)
+    })
+
+    it('adds at the end from the last option, so a list can be typed out with Enter alone', () => {
+      const { field, parent, values } = setup({ options: [] })
+      parent.querySelector<HTMLButtonElement>('.pm-prop-add')?.click()
+      for (const name of ['One', 'Two', 'Three']) {
+        const active = document.activeElement
+        if (!(active instanceof HTMLInputElement)) throw new Error('focus left the options')
+        active.value = name
+        press(active)
+      }
+      expect(field.options).toEqual(['One', 'Two', 'Three', ''])
+      expect(values()).toEqual(['One', 'Two', 'Three', ''])
+    })
+
+    it('does nothing on an empty option, so blank rows do not pile up', () => {
+      const { field, onChanged, rows } = setup({ options: ['A', ''] })
+      const empty = inputAt(rows, 1)
+      expect(press(empty).defaultPrevented).toBe(true)
+      expect(field.options).toEqual(['A', ''])
+      expect(onChanged).not.toHaveBeenCalled()
+    })
+
+    it('leaves Enter to the input method while text is being composed', () => {
+      const { field, rows } = setup()
+      expect(press(inputAt(rows, 0), { isComposing: true }).defaultPrevented).toBe(false)
+      expect(field.options).toEqual(['A', 'B', 'C'])
+    })
+  })
+
   it('turns numbering on and off, leaving the option text alone', () => {
     const { field, onChanged, parent, values } = setup()
     const toggle = parent.querySelector<HTMLInputElement>('.pm-cf-numbered input')
