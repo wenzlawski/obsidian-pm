@@ -13,7 +13,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keyboard-first use of the PM views: browse, select and act on tasks from the table, board and timeline, and on projects from the list and overview. Press `?` for the current keys or `Mod+K` for a searchable action list. See [docs/keyboard.md](docs/keyboard.md)
 - The task name column in the table can now be resized
 - Options of a select or multi-select custom field can be reordered by dragging, or with Alt+Up and Alt+Down
-- Pressing Enter in an option of a select or multi-select custom field confirms it and starts the next one
+- Pressing Enter in an option of a select or multi-select custom field confirms it and starts the next one, and an option left empty disappears when you click away from it
 - A select or multi-select custom field can number its options automatically ("1. Draft"). The numbers follow the list when you add, remove or reorder options, and tasks keep the plain option as their value
 
 ### Fixed

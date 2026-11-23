@@ -95,6 +95,88 @@ describe('select options editor', () => {
     })
   })
 
+  describe('an empty option', () => {
+    const leave = (from: HTMLElement, to: HTMLElement | null): void => {
+      from.dispatchEvent(new FocusEvent('focusout', { bubbles: true, relatedTarget: to }))
+    }
+    const inputAt = (rows: () => HTMLElement[], i: number): HTMLInputElement => {
+      const el = rows()[i].querySelector<HTMLInputElement>('input')
+      if (!el) throw new Error('no input')
+      return el
+    }
+    const withBlank = () => {
+      const s = setup({ options: ['A', 'B'] })
+      const first = inputAt(s.rows, 0)
+      first.dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', cancelable: true }))
+      return { ...s, blank: inputAt(s.rows, 1) }
+    }
+
+    it('goes when focus leaves the editor', () => {
+      const { field, onChanged, blank, values } = withBlank()
+      expect(field.options).toEqual(['A', '', 'B'])
+      onChanged.mockClear()
+      leave(blank, null)
+      expect(field.options).toEqual(['A', 'B'])
+      expect(values()).toEqual(['A', 'B'])
+      expect(onChanged).toHaveBeenCalledTimes(1)
+    })
+
+    it('goes when focus moves to another option, which keeps its own input and focus', () => {
+      const { field, rows, blank } = withBlank()
+      const other = inputAt(rows, 2)
+      other.focus()
+      leave(blank, other)
+      expect(field.options).toEqual(['A', 'B'])
+      expect(inputAt(rows, 1)).toBe(other)
+      expect(document.activeElement).toBe(other)
+    })
+
+    it('renumbers the options that remain', () => {
+      const { parent, blank } = withBlank()
+      parent.querySelector<HTMLInputElement>('.pm-cf-numbered input')?.click()
+      const numbers = (): string[] =>
+        Array.from(parent.querySelectorAll('.pm-cf-opt-num')).map((n) => n.textContent ?? '')
+      expect(numbers()).toEqual(['1.', '2.', '3.'])
+      leave(parent.querySelectorAll<HTMLInputElement>('.pm-cf-opt-input')[1], null)
+      expect(numbers()).toEqual(['1.', '2.'])
+      expect(blank.isConnected).toBe(false)
+    })
+
+    it('stays while focus moves to a button of the editor, until that button acts', () => {
+      const { field, parent, rows, blank } = withBlank()
+      const remove = rows()[0].querySelector<HTMLElement>('.pm-icon-btn')
+      if (!remove) throw new Error('no remove button')
+      leave(blank, remove)
+      expect(field.options).toEqual(['A', '', 'B'])
+      remove.click()
+      expect(field.options).toEqual(['B'])
+      expect(parent.querySelectorAll('.pm-cf-opt-row')).toHaveLength(1)
+    })
+
+    it('is kept when text typed into it', () => {
+      const { field, blank } = withBlank()
+      blank.value = 'New'
+      blank.dispatchEvent(new Event('change'))
+      leave(blank, null)
+      expect(field.options).toEqual(['A', 'New', 'B'])
+    })
+
+    it('is reused by Add option rather than adding a second one', () => {
+      const { field, parent, blank } = withBlank()
+      parent.querySelector<HTMLButtonElement>('.pm-prop-add')?.click()
+      expect(field.options).toEqual(['A', '', 'B'])
+      expect(document.activeElement).toBe(blank)
+    })
+
+    it('still lets rows be dragged after one has gone', () => {
+      const { field, rows, blank } = withBlank()
+      leave(blank, null)
+      rows()[1].dispatchEvent(new Event('dragstart'))
+      rows()[0].dispatchEvent(new Event('drop'))
+      expect(field.options).toEqual(['B', 'A'])
+    })
+  })
+
   it('turns numbering on and off, leaving the option text alone', () => {
     const { field, onChanged, parent, values } = setup()
     const toggle = parent.querySelector<HTMLInputElement>('.pm-cf-numbered input')
