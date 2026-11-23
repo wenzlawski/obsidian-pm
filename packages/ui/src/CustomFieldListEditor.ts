@@ -138,6 +138,16 @@ export function renderCustomFieldOptions(parent: HTMLElement, field: CustomField
         onChanged()
       })
       input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.isComposing) {
+          e.preventDefault()
+          e.stopPropagation()
+          if (!input.value.trim()) return
+          options[i] = input.value
+          options.splice(i + 1, 0, '')
+          onChanged()
+          drawOptions(i + 1)
+          return
+        }
         if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return
         e.preventDefault()
         e.stopPropagation()
