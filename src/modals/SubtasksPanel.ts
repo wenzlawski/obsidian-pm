@@ -7,7 +7,7 @@ import {
   getDefaultStatusId,
   t
 } from '@dotpm/core'
-import { renderNoteLink, Checkbox, IconButton } from '@dotpm/ui'
+import { renderNoteLink, Checkbox, IconButton, makeReorderable, setIcon } from '@dotpm/ui'
 
 /** The header count is how many subtasks sit in a terminal status. */
 export function renderSubtasksPanel(
@@ -34,10 +34,43 @@ export function renderSubtasksPanel(
     countEl.setText(`${done}/${total}`)
   }
 
+  const reorder = (ids: string[], focusId?: string) => {
+    const byId = new Map(task.subtasks.map((s) => [s.id, s]))
+    task.subtasks = ids.flatMap((id) => byId.get(id) ?? [])
+    renderSubtasks()
+    if (focusId)
+      subList.querySelector<HTMLElement>(`[data-subtask-id="${CSS.escape(focusId)}"] .pm-subtask-grip`)?.focus()
+  }
+
+  const moveBy = (id: string, by: -1 | 1) => {
+    const ids = task.subtasks.map((s) => s.id)
+    const from = ids.indexOf(id)
+    const to = from + by
+    if (from < 0 || to < 0 || to >= ids.length) return
+    ids.splice(from, 1)
+    ids.splice(to, 0, id)
+    reorder(ids, id)
+  }
+
   const renderSubtasks = () => {
     subList.empty()
+    const rows: { el: HTMLElement; id: string }[] = []
     for (const sub of task.subtasks) {
       const row = subList.createDiv('pm-modal-subtask-row')
+      row.dataset.subtaskId = sub.id
+      rows.push({ el: row, id: sub.id })
+
+      const grip = row.createSpan({
+        cls: 'pm-subtask-grip',
+        attr: { role: 'button', tabindex: '0', 'aria-label': t('subtasks.reorder', { title: sub.title }) }
+      })
+      setIcon(grip, 'grip-vertical')
+      grip.addEventListener('keydown', (e) => {
+        if (!e.altKey || (e.key !== 'ArrowUp' && e.key !== 'ArrowDown')) return
+        e.preventDefault()
+        e.stopPropagation()
+        moveBy(sub.id, e.key === 'ArrowUp' ? -1 : 1)
+      })
 
       const done = isTerminalStatus(sub.status, statuses)
 
@@ -71,12 +104,14 @@ export function renderSubtasksPanel(
           renderCount()
         })
     }
+    makeReorderable(rows, (ids) => reorder(ids))
   }
 
   renderSubtasks()
   renderCount()
 
   const addRow = subSection.createDiv('pm-modal-subtask-row pm-subtask-add-row')
+  addRow.createSpan({ cls: 'pm-subtask-grip', attr: { 'aria-hidden': 'true' } })
   addRow.createSpan({ cls: 'pm-subtask-checkbox-ghost', attr: { 'aria-hidden': 'true' } })
   const addInput = addRow.createEl('input', {
     cls: 'pm-subtask-add-input',

@@ -711,6 +711,7 @@
   "subtasks.done": "Done: {title}",
   "subtasks.heading": "Subtasks",
   "subtasks.remove": "Remove subtask",
+  "subtasks.reorder": "Move {title} (drag, or Alt+Up and Alt+Down)",
   "table.archivedTasks.one": "Archived {count} task",
   "table.archivedTasks.other": "Archived {count} tasks",
   "table.deleteTasksConfirm.one": "Delete {count} task? This cannot be undone.",
