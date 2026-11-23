@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   customOptionLabel,
+  customOptionsText,
+  isNumbered,
   dedupePeople,
   displayName,
   dueUrgency,
@@ -259,5 +261,31 @@ describe('customOptionLabel', () => {
 
   it('ignores the flag on a field that is not a select', () => {
     expect(customOptionLabel({ type: 'text', options: ['a'], numbered: true }, 'a')).toBe('a')
+  })
+})
+
+describe('numbered option text', () => {
+  const field: CustomFieldDef = {
+    id: 'f',
+    name: 'F',
+    type: 'multiselect',
+    options: ['Draft', '[[Review]]', 'Done'],
+    numbered: true
+  }
+
+  it('is numbered only for a select with the flag on', () => {
+    expect(isNumbered(field)).toBe(true)
+    expect(isNumbered({ ...field, numbered: false })).toBe(false)
+    expect(isNumbered({ ...field, type: 'text' })).toBe(false)
+  })
+
+  it('lets a caller show the option its own way under the number', () => {
+    expect(customOptionLabel(field, '[[Review]]', 'Review')).toBe('2. Review')
+    expect(customOptionLabel({ ...field, numbered: false }, '[[Review]]', 'Review')).toBe('Review')
+  })
+
+  it('joins values, each numbered, a link shown as its note', () => {
+    expect(customOptionsText(field, ['Done', '[[Review]]'])).toBe('3. Done, 2. Review')
+    expect(customOptionsText(field, ['Gone'])).toBe('Gone')
   })
 })

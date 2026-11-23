@@ -133,6 +133,21 @@ describe('snapshot table', () => {
     expect(cells).not.toContain('2030-01-20')
   })
 
+  it('numbers the options of a numbered select, a linked one as its note name', () => {
+    const view = model()
+    view.projects[0].config = {
+      ...CONFIG,
+      customFields: [
+        { id: 'stage', name: 'Stage', type: 'multiselect', options: ['Draft', '[[Review]]', 'Done'], numbered: true }
+      ]
+    }
+    view.projects[0].tasks[0].customFields = { stage: ['Done', '[[Review]]'] }
+    const host = document.body.createDiv()
+    renderSnapshotTable(host, view)
+    const cells = Array.from(host.querySelectorAll('tr[data-task-id="a"] td')).map((td) => td.textContent?.trim())
+    expect(cells).toContain('3. Done, 2. Review')
+  })
+
   it('colors an assignee avatar with the color the snapshot carries for them', () => {
     const view = model({ personColors: { '[[Jane Doe]]': '#c47070' } })
     view.projects[0].tasks[0].assignees = ['[[Jane Doe]]', 'Sam Lee']

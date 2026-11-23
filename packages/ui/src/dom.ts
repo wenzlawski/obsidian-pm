@@ -37,35 +37,57 @@ export function makeActivatable(el: HTMLElement, open: () => void): void {
 }
 
 /**
- * Lets the rows be dragged into another order. A row dropped on another takes that row's
- * place, so it lands after a row below it and before a row above it. `onReorder` gets every
- * id in the new order; nothing is called when the order stays the same.
+ * Wires rows to be dragged into another order, for a list whose rows come and go: `ids` is
+ * read at each drop, so it names the rows as they are then. A row dropped on another takes
+ * that row's place, so it lands after a row below it and before a row above it. `onReorder`
+ * gets every id in the new order; nothing is called when the order stays the same.
+ *
+ * Give a `handle` and the row can only be dragged by it, so text inside the row can still be
+ * selected with the mouse.
  */
-export function makeReorderable<T extends string>(
-  rows: { el: HTMLElement; id: T }[],
+export function createReorderGroup<T extends string>(
+  ids: () => T[],
   onReorder: (ids: T[]) => void
-): void {
-  const ids = rows.map((row) => row.id)
+): (el: HTMLElement, id: T, handle?: HTMLElement) => void {
   let dragged: T | null = null
-  for (const { el, id } of rows) {
-    el.setAttr('draggable', 'true')
+  return (el, id, handle) => {
+    if (handle) {
+      handle.addEventListener('mousedown', () => el.setAttr('draggable', 'true'))
+      handle.addEventListener('mouseup', () => el.removeAttribute('draggable'))
+    } else {
+      el.setAttr('draggable', 'true')
+    }
     el.addEventListener('dragstart', (e) => {
       dragged = id
       e.dataTransfer?.setData('text/plain', id)
       el.addClass('is-dragging')
     })
-    el.addEventListener('dragend', () => el.removeClass('is-dragging'))
+    el.addEventListener('dragend', () => {
+      el.removeClass('is-dragging')
+      if (handle) el.removeAttribute('draggable')
+    })
     el.addEventListener('dragover', (e) => e.preventDefault())
     el.addEventListener('drop', (e) => {
       e.preventDefault()
       const from = dragged
       dragged = null
-      if (from === null || from === id || !ids.includes(from)) return
-      const next = ids.filter((other) => other !== from)
-      next.splice(ids.indexOf(id), 0, from)
+      const all = ids()
+      if (from === null || from === id || !all.includes(from)) return
+      const next = all.filter((other) => other !== from)
+      next.splice(all.indexOf(id), 0, from)
       onReorder(next)
     })
   }
+}
+
+/** Lets a fixed set of rows be dragged into another order; see `createReorderGroup`. */
+export function makeReorderable<T extends string>(
+  rows: { el: HTMLElement; id: T }[],
+  onReorder: (ids: T[]) => void
+): void {
+  const ids = rows.map((row) => row.id)
+  const wire = createReorderGroup(() => ids, onReorder)
+  for (const { el, id } of rows) wire(el, id)
 }
 
 export function safeAsync<A extends unknown[]>(fn: (...args: A) => Promise<void>): (...args: A) => void {
