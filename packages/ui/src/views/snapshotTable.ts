@@ -2,11 +2,12 @@ import {
   type CustomFieldDef,
   type FlatTask,
   applyTaskFilterFlat,
-  customOptionLabel,
+  customOptionsText,
   dueUrgency,
   flattenTasks,
   formatDateLong,
   getStatusConfig,
+  isNumbered,
   isQueryActive,
   isTerminalStatus,
   columnWidth,
@@ -96,7 +97,7 @@ function customFieldValue(model: ViewModel, cf: CustomFieldDef, val: unknown): C
   if (cf.type === 'checkbox') return { kind: 'checkbox', checked: Boolean(val) }
   if (cf.type === 'url') return { kind: 'url', url: values.join(', ') }
   if (cf.type === 'date') return { kind: 'text', text: values.map((v) => formatDateLong(v) || v).join(', ') }
-  if (cf.numbered) return { kind: 'text', text: values.map((v) => customOptionLabel(cf, v)).join(', ') }
+  if (isNumbered(cf)) return { kind: 'text', text: customOptionsText(cf, values) }
   return { kind: 'text', text: val !== undefined ? stringifyCustomValue(val) : '' }
 }
 

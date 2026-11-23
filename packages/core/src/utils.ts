@@ -119,18 +119,28 @@ export function stringifyCustomValue(val: unknown): string {
   return ''
 }
 
+type NumberableField = Pick<CustomFieldDef, 'type' | 'options' | 'numbered'>
+
+/** Whether a field labels its options with their place in the list. Only a select can. */
+export function isNumbered(field: NumberableField): boolean {
+  return field.numbered === true && (field.type === 'select' || field.type === 'multiselect')
+}
+
 /**
  * How a select value is shown. A numbered field prefixes the option with its place in the
  * list, so the number follows the option when the list is reordered or edited. A value that
- * is no longer an option has no place and shows as it is.
+ * is no longer an option has no place and shows as it is. `text` is how the option reads
+ * without its number, for a view that shows it other than as written, such as a link's name.
  */
-export function customOptionLabel(
-  field: Pick<CustomFieldDef, 'type' | 'options' | 'numbered'>,
-  option: string
-): string {
-  if (!field.numbered || (field.type !== 'select' && field.type !== 'multiselect')) return option
+export function customOptionLabel(field: NumberableField, option: string, text = option): string {
+  if (!isNumbered(field)) return text
   const index = field.options?.indexOf(option) ?? -1
-  return index < 0 ? option : `${index + 1}. ${option}`
+  return index < 0 ? text : `${index + 1}. ${text}`
+}
+
+/** The values of a numbered select as one line, a value naming a note shown as that note. */
+export function customOptionsText(field: NumberableField, values: string[]): string {
+  return values.map((value) => customOptionLabel(field, value, displayName(value))).join(', ')
 }
 
 export function sanitizeFileName(title: string): string {

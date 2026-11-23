@@ -27,6 +27,8 @@ export function descriptionPreview(markdown: string): string | undefined {
   return text ? text.slice(0, 240) : undefined
 }
 
+const WIKILINK = /^\[\[(?:[^|\]]*\|)?([^\]]*)\]\]$/
+
 /** The custom fields among `fields`, as the card shows them. */
 export function cardCustomValues(
   task: Task,
@@ -46,11 +48,7 @@ export function cardCustomValues(
           : ''
         : cf.type === 'date'
           ? list.map((value) => formatDateLong(value) || value).join(', ')
-          : list
-              .map((value) =>
-                customOptionLabel(cf, value).replace(/^((?:\d+\. )?)\[\[(?:[^|\]]*\|)?([^\]]*)\]\]$/, '$1$2')
-              )
-              .join(', ')
+          : list.map((value) => customOptionLabel(cf, value, value.replace(WIKILINK, '$1'))).join(', ')
     if (text) values[id] = { name: cf.name, text }
   }
   return values

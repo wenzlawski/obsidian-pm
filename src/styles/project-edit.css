@@ -176,6 +176,11 @@
   font-size: var(--font-ui-small);
   color: var(--text-muted);
 }
+.pm-cf-opt-editor {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 .pm-cf-opt-list {
   display: flex;
   flex-direction: column;
