@@ -1,8 +1,9 @@
-import { type Task, effectiveTags, formatDateShort, t } from '@dotpm/core'
+import { type InheritedShare, type Task, effectiveTags, formatDateShort, t } from '@dotpm/core'
 import { AvatarStack, type AvatarPerson } from '#primitives/AvatarStack'
 import { Chip } from '#primitives/Chip'
 import { ProgressBar } from '#primitives/ProgressBar'
 import { renderDueChip } from './dueChip'
+import { markInherited } from './inheritedMark'
 import { renderPriorityIndicator, type PriorityIndicator } from './priorityIndicator'
 import { renderTagChip } from './tagChip'
 import { renderTimeChip } from './timeChip'
@@ -11,6 +12,7 @@ import { renderTimeChip } from './timeChip'
 export interface CardFieldValue {
   name: string
   text: string
+  inherited?: InheritedShare
 }
 
 export interface KanbanCardProps {
@@ -110,7 +112,8 @@ export class KanbanCard {
         const { name, text } = props.customValues[field]
         const row = body.createDiv('pm-kanban-card-field')
         row.createSpan({ cls: 'pm-kanban-card-field-name', text: name })
-        row.createSpan({ cls: 'pm-kanban-card-field-value', text })
+        const value = row.createSpan({ cls: 'pm-kanban-card-field-value', text })
+        markInherited(value, props.customValues[field].inherited ?? 'none')
       }
     }
     if (footer.childElementCount) body.appendChild(footer)
