@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- Rows in the table can be dragged above or below a sibling to put tasks in your own order, or moved with Alt+Up and Alt+Down. It works while the table has no sort, and the move can be undone
 - Keyboard-first use of the PM views: browse, select and act on tasks from the table, board and timeline, and on projects from the list and overview. Press `?` for the current keys or `Mod+K` for a searchable action list. See [docs/keyboard.md](docs/keyboard.md)
 - The task name column in the table can now be resized
 

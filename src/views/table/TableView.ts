@@ -15,6 +15,7 @@ import type { ProjectScope } from '#store'
 import { safeAsync } from '@dotpm/ui'
 import type { KeyboardSelection, KeyboardSurface } from '#ui/keyboard/types'
 import type { SubView } from '../SubView'
+import { reorderTask } from '#ui/reorderTask'
 import { collapsedTaskIds, setCollapsed as setTaskCollapsed } from '../collapse'
 import {
   renderTable,
@@ -57,7 +58,8 @@ export class TableView implements SubView, KeyboardSurface {
       resizeObserver: null,
       windowStart: -1,
       windowEnd: -1,
-      renderWindow: null
+      renderWindow: null,
+      dragged: null
     }
   }
 
@@ -121,6 +123,36 @@ export class TableView implements SubView, KeyboardSurface {
     setTaskCollapsed(this.plugin.settings, project, id, collapsed)
     await this.plugin.saveSettings()
     await this.onRefresh()
+  }
+
+  /**
+   * Steps a task past the neighbour above or below it among its siblings. Rows of the
+   * neighbour's own subtasks lie between them on screen, and the move goes over those too.
+   */
+  async reorder(delta: 1 | -1, id?: string): Promise<void> {
+    const taskId = id ?? this.state.selectedTaskId
+    if (!taskId) return
+    if (this.state.sort.length > 0) {
+      new Notice(t('table.reorderNeedsNoSort'))
+      return
+    }
+    const rows = this.state.visibleRows
+    const at = rows.findIndex((row) => row.task.id === taskId)
+    const project = this.scope.projectOf(taskId)
+    if (at === -1 || !project) return
+    const me = rows[at]
+    for (let i = at + delta; i >= 0 && i < rows.length; i += delta) {
+      const other = rows[i]
+      if (other.depth > me.depth) continue
+      if (other.depth < me.depth || other.parentId !== me.parentId || this.scope.projectOf(other.task.id) !== project) {
+        return
+      }
+      if (await reorderTask(this.plugin, project, taskId, other.task.id, delta < 0 ? 'before' : 'after')) {
+        await this.onRefresh()
+        this.paintActive()
+      }
+      return
+    }
   }
 
   /** Paints the active row and lets the virtual window scroll it into range. */

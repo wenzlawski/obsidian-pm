@@ -39,6 +39,8 @@ export interface KeyboardSurface {
   cancel?(): boolean
   /** False while a filter makes the tree's collapse state invisible. */
   canCollapse?(): boolean
+  /** Steps a task past its neighbour in its list: -1 up, 1 down. Defaults to the active task. */
+  reorder?(delta: 1 | -1, id?: string): void | Promise<void>
   expand?(): void | Promise<void>
   collapse?(): void | Promise<void>
 }

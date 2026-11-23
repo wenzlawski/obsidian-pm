@@ -42,6 +42,8 @@ export type ActionId =
   | 'viewTimeline'
   | 'moveCardNext'
   | 'moveCardPrev'
+  | 'moveUp'
+  | 'moveDown'
   | 'expand'
   | 'collapse'
   | 'openOverview'
@@ -111,6 +113,8 @@ export const ACTION_LABELS: Record<ActionId, MessageKey> = {
   viewTimeline: 'views.gantt',
   moveCardNext: 'keyboard.moveCardNext',
   moveCardPrev: 'keyboard.moveCardPrev',
+  moveUp: 'keyboard.moveUp',
+  moveDown: 'keyboard.moveDown',
   expand: 'keyboard.expand',
   collapse: 'keyboard.collapse',
   openOverview: 'keyboard.openOverview',
@@ -172,6 +176,8 @@ export const ACTION_SECTIONS: Record<ActionId, KeyboardSection> = {
   redo: 'tasks',
   moveCardNext: 'tasks',
   moveCardPrev: 'tasks',
+  moveUp: 'tasks',
+  moveDown: 'tasks',
   openOverview: 'projects',
   editProject: 'projects',
   openNote: 'projects',
@@ -238,6 +244,11 @@ const COMMON_ACTIONS: Binding[] = [
   { keys: ['?', 'F1'], action: 'help' }
 ]
 
+const REORDER: Binding[] = [
+  { keys: ['Alt+ArrowUp'], action: 'moveUp' },
+  { keys: ['Alt+ArrowDown'], action: 'moveDown' }
+]
+
 const TREE: Binding[] = [
   { keys: ['ArrowRight', 'l'], action: 'expand' },
   { keys: ['ArrowLeft', 'h'], action: 'collapse' }
@@ -251,7 +262,7 @@ const BOARD: Binding[] = [
 ]
 
 export const KEYMAP: Record<KeyboardContext, Binding[]> = {
-  table: [...NAVIGATE, ...SELECT, ...TASK_ACTIONS, ...VIEW_ACTIONS, ...COMMON_ACTIONS, ...TREE],
+  table: [...NAVIGATE, ...SELECT, ...TASK_ACTIONS, ...VIEW_ACTIONS, ...COMMON_ACTIONS, ...TREE, ...REORDER],
   board: [...NAVIGATE, ...TASK_ACTIONS, ...VIEW_ACTIONS, ...COMMON_ACTIONS, ...BOARD],
   timeline: [...NAVIGATE, ...TASK_ACTIONS, ...VIEW_ACTIONS, ...COMMON_ACTIONS, ...TREE],
   projects: [
@@ -332,6 +343,7 @@ export function isActionAvailable(action: ActionId, surface: KeyboardSurface | n
   if (NEEDS_SELECTION.has(action)) return !!surface.selection
   if (NEEDS_ITEMS.has(action)) return surface.groups().some((group) => group.length > 0)
   if (NEEDS_ACTIVE.has(action)) return !!surface.activeId()
+  if (action === 'moveUp' || action === 'moveDown') return !!surface.activeId() && !!surface.reorder
   if (action === 'expand') return !!surface.activeId() && !!surface.expand && (surface.canCollapse?.() ?? true)
   if (action === 'collapse') return !!surface.activeId() && !!surface.collapse && (surface.canCollapse?.() ?? true)
   if (NEEDS_TARGET.has(action)) return !!surface.activeId() || !!surface.selection?.().ids().size

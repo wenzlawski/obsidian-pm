@@ -8,6 +8,7 @@ import {
   type PriorityConfig,
   type PriorityIconSet,
   type StatusConfig,
+  type Project,
   type FlatTask,
   type ViewFields,
   SORT_KEYS,
@@ -49,6 +50,8 @@ export interface TableState {
   windowStart: number
   windowEnd: number
   renderWindow: (() => void) | null
+  /** The row being dragged to a new place among its siblings. */
+  dragged: { id: string; parentId: string | null; project: Project } | null
 }
 
 export interface TableContext {

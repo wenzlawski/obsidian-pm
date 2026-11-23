@@ -59,7 +59,9 @@ const QUEUED = new Set<ActionId>([
   'undo',
   'redo',
   'moveCardNext',
-  'moveCardPrev'
+  'moveCardPrev',
+  'moveUp',
+  'moveDown'
 ])
 
 const NAVIGATION = new Set<ActionId>([

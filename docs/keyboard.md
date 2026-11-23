@@ -38,6 +38,7 @@ shortcuts sheet leaves it out.
 | `u` | Archive or unarchive |
 | `Delete` / `Backspace` | Delete, after confirming |
 | `Mod+Z`, `Mod+Shift+Z` | Undo / redo |
+| `Alt+↑`, `Alt+↓` | Move a table row up / down among its siblings (needs the sort removed) |
 | `Mod+←`, `Mod+→` | Move a board card to the previous / next column |
 | `Mod+F` or `/` | Focus search |
 | `f` / `Shift+F` | Open the filter panel / clear every filter |
@@ -62,7 +63,7 @@ On the project list, `o` opens the project overview and `e` edits the project. O
 project's overview page, `Enter` opens its tasks, `e` edits the project, `o` opens the
 Markdown note, and `n` adds a task.
 
-Field changes made with keys (`x`, `s`, `p`, `a`, `d`, `#`) go on the plugin's undo
+Field changes made with keys (`x`, `s`, `p`, `a`, `d`, `#`) and moving a row with `Alt+↑` / `Alt+↓` go on the plugin's undo
 stack. Deleting always asks first. Moving a task to another project or parent is not
 undoable, just as it is not from the context menu; a task moved to another project
 starts there as a top-level task. Keys in a text field, a popover, a menu

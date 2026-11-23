@@ -528,3 +528,13 @@ button.pm-chip-rm {
 .pm-table-add-row td {
   padding: 8px 10px;
 }
+
+.pm-table-row--dragging {
+  opacity: 0.4;
+}
+.pm-table-row--drop-before > td {
+  box-shadow: inset 0 2px 0 var(--interactive-accent);
+}
+.pm-table-row--drop-after > td {
+  box-shadow: inset 0 -2px 0 var(--interactive-accent);
+}

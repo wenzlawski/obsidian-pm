@@ -262,6 +262,8 @@ export class ProjectView extends ItemView {
       viewTimeline: () => this.switchMode('gantt'),
       moveCardNext: () => board?.moveCard(1, snapshot?.activeId ?? undefined, snapshot?.activeGroupKey ?? undefined),
       moveCardPrev: () => board?.moveCard(-1, snapshot?.activeId ?? undefined, snapshot?.activeGroupKey ?? undefined),
+      moveUp: () => this.currentSurface()?.reorder?.(-1, snapshot?.activeId ?? undefined),
+      moveDown: () => this.currentSurface()?.reorder?.(1, snapshot?.activeId ?? undefined),
       undo: () =>
         (async () => {
           if (this.subview instanceof GanttView && this.subview.isDragging()) return
