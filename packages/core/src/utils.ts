@@ -154,6 +154,44 @@ export function customFieldPatch(task: Task, fieldId: string, value: unknown): P
   return { customFields }
 }
 
+/** One change to a custom field, applied to many tasks at once. */
+export type CustomFieldChange =
+  /** Every task takes this value. */
+  | { mode: 'set'; value: unknown }
+  /** Every task gains these values next to the ones it has, as tags are added. */
+  | { mode: 'add'; values: string[] }
+  | { mode: 'clear' }
+
+/**
+ * The patch a bulk change makes to one task, or null where the task already ends up as the
+ * change asks, so it isn't rewritten for nothing.
+ */
+export function applyCustomFieldChange(
+  task: Task,
+  fieldId: string,
+  change: CustomFieldChange
+): Pick<Task, 'customFields'> | null {
+  const current = task.customFields[fieldId]
+  let next: unknown
+  switch (change.mode) {
+    case 'set':
+      next = change.value
+      break
+    case 'add': {
+      const held = (Array.isArray(current) ? current : [current]).map(stringifyCustomValue).filter(Boolean)
+      const gained = change.values.filter((value) => !held.includes(value))
+      if (gained.length === 0) return null
+      next = [...held, ...gained]
+      break
+    }
+    case 'clear':
+      next = ''
+      break
+  }
+  const patch = customFieldPatch(task, fieldId, next)
+  return JSON.stringify(patch.customFields[fieldId]) === JSON.stringify(current) ? null : patch
+}
+
 export function sanitizeFileName(title: string): string {
   return title.replace(/[\\/:*?"<>|]/g, '-')
 }

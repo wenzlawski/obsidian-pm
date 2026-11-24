@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Pressing Enter in an option of a select or multi-select custom field confirms it and starts the next one, and an option left empty disappears when you click away from it
 - A select or multi-select custom field can number its options automatically ("1. Draft"). The numbers follow the list when you add, remove or reorder options, and tasks keep the plain option as their value
 - Select and multi-select custom fields can be changed straight from the table, like status and priority
+- The bar shown when several tasks are selected has a "Set property" button that sets or clears any custom property on all of them: pick from the options of a select, add values to a multi-select, set a person, a date, a checkbox, a number or text
 
 ### Fixed
 

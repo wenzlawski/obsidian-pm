@@ -1,5 +1,6 @@
 import { ButtonComponent, ExtraButtonComponent, Menu } from 'obsidian'
 import {
+  type CustomFieldChange,
   type Task,
   type TaskStatus,
   type TaskPriority,
@@ -14,6 +15,7 @@ import { openOptionPicker, priorityPickerItems, statusPickerItems } from '@dotpm
 import { promptText } from '#ui/ModalFactory'
 import { peopleSource } from '#ui/PersonPicker'
 import { TaskPickerModal } from '#modals/PickerModals'
+import { bulkEditableFields, openBulkPropertyPicker, pickDate } from './BulkFieldEditors'
 import type { TableContext } from './TableRenderer'
 import { updateSelectAllCheckbox } from './TableRow'
 
@@ -22,6 +24,7 @@ export type BulkAction =
   | { type: 'set-priority'; priority: TaskPriority }
   | { type: 'set-assignee'; assignee: string }
   | { type: 'set-tag'; tag: string }
+  | { type: 'set-custom'; fieldId: string; change: CustomFieldChange }
   | { type: 'set-due-date'; due: string }
   | { type: 'set-progress'; progress: number }
   | { type: 'set-parent'; parentId: string }
@@ -143,18 +146,7 @@ function updateBarContent(bar: HTMLElement, ctx: TableContext, onAction: (a: Bul
     )
     menu.addSeparator()
     menu.addItem((item) =>
-      item.setTitle(t('bulk.pickDate')).onClick(() => {
-        const input = activeDocument.createEl('input')
-        input.type = 'date'
-        input.addClass('pm-offscreen')
-        activeDocument.body.appendChild(input)
-        input.addEventListener('change', () => {
-          if (input.value) onAction({ type: 'set-due-date', due: input.value })
-          input.remove()
-        })
-        input.addEventListener('blur', () => window.setTimeout(() => input.remove(), 200))
-        input.showPicker()
-      })
+      item.setTitle(t('bulk.pickDate')).onClick(() => pickDate((due) => onAction({ type: 'set-due-date', due })))
     )
     menu.addSeparator()
     menu.addItem((item) =>
@@ -162,6 +154,15 @@ function updateBarContent(bar: HTMLElement, ctx: TableContext, onAction: (a: Bul
     )
     menu.showAtMouseEvent(e)
   })
+
+  if (bulkEditableFields(ctx).length > 0) {
+    const propertyButton = new ButtonComponent(left).setButtonText(t('bulk.setProperty'))
+    propertyButton.onClick(() =>
+      openBulkPropertyPicker(ctx, propertyButton.buttonEl, (field, change) =>
+        onAction({ type: 'set-custom', fieldId: field.id, change })
+      )
+    )
+  }
 
   new ButtonComponent(left).setButtonText(t('bulk.setProgress')).onClick((e) => {
     const menu = new Menu()

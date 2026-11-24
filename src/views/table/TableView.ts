@@ -8,6 +8,7 @@ import {
   type Project,
   type SortRule,
   type ViewFields,
+  applyCustomFieldChange,
   isQueryActive,
   shownFields
 } from '@dotpm/core'
@@ -285,6 +286,14 @@ export class TableView implements SubView, KeyboardSurface {
           await this.bulkAddToArray(project, ids, 'tags', action.tag)
         }
         break
+      case 'set-custom': {
+        // A selection can span projects that don't all define the field; those are left alone.
+        if (!this.plugin.store.configFor(project).customFields.some((field) => field.id === action.fieldId)) break
+        await this.plugin.store.updateTasks(project, ids, (task) =>
+          applyCustomFieldChange(task, action.fieldId, action.change)
+        )
+        break
+      }
       case 'set-due-date':
         await this.plugin.store.updateTasks(project, ids, { due: action.due })
         for (const id of ids) {

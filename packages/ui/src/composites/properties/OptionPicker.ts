@@ -9,6 +9,11 @@ export interface OptionPickerOpts {
   multiple?: boolean
   /** A single choice gets a first row clearing it, under this label. */
   noneLabel?: string
+  /**
+   * A first row that runs at once and drops whatever was picked. Unlike `noneLabel` it does not
+   * compare against `selected`, for a choice made over several things that have no one value.
+   */
+  clear?: { label: string; run: () => void }
   /** Lists longer than this get a search field. */
   searchAbove?: number
   searchPlaceholder?: string
@@ -65,6 +70,18 @@ export function openOptionPicker(opts: OptionPickerOpts): Popover {
   const renderList = (): void => {
     list.empty()
     const q = search?.value.trim().toLowerCase() ?? ''
+    const clear = opts.clear
+    if (clear && !q) {
+      renderOptionRow(list, {
+        label: clear.label,
+        icon: 'x',
+        onPick: () => {
+          current = [...opts.selected]
+          pop.close()
+          clear.run()
+        }
+      })
+    }
     if (!opts.multiple && opts.noneLabel && !q) {
       renderOptionRow(list, { label: opts.noneLabel, selected: current.length === 0, onPick: () => toggle('') })
     }
