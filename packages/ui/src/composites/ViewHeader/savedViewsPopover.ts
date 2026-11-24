@@ -182,8 +182,17 @@ export function renderSavedViewsPanel(parent: HTMLElement, props: SavedViewsProp
   if (!props.canSave) setTooltip(start, t('header.nothingToSave'))
 }
 
-/** The saved views in a popover under `anchor`, with the search field focused when there is one. */
-export function openSavedViewsPopover(anchor: HTMLElement, props: SavedViewsProps): Popover {
+/**
+ * The saved views in a popover under `anchor`, with the search field focused when there is one.
+ * Pressing the anchor while they are open closes them and returns null, rather than opening
+ * another on top.
+ */
+export function openSavedViewsPopover(anchor: HTMLElement, props: SavedViewsProps): Popover | null {
+  const open = Popover.openOn(anchor)
+  if (open) {
+    open.close()
+    return null
+  }
   const pop = Popover.show({ anchor, width: 300 }, (el, close) => renderSavedViewsPanel(el, props, close))
   pop.contentEl.find('input.pm-pop-field')?.focus()
   return pop

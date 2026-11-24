@@ -484,6 +484,15 @@ describe('saved views popover', () => {
     expect(document.body.find('.pm-saved-views-dirty')).toBeNull()
   })
 
+  it('closes instead of stacking another popover when its button is pressed again', () => {
+    const anchor = document.body.createEl('button')
+    expect(openSavedViewsPopover(anchor, props())).not.toBeNull()
+    expect(openSavedViewsPopover(anchor, props())).toBeNull()
+    expect(document.body.findAll('.pm-pop').length).toBe(0)
+    expect(openSavedViewsPopover(anchor, props())).not.toBeNull()
+    expect(document.body.findAll('.pm-pop').length).toBe(1)
+  })
+
   it('offers update, save as new and revert while the active view has unsaved changes', async () => {
     const p = props({ changes: ['Filter', 'Sort'] })
     openSavedViewsPopover(document.body.createEl('button'), p)
