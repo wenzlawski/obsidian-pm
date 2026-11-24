@@ -10,6 +10,7 @@ import {
   type ResolvedProjectConfig,
   type ViewFields,
   customFieldOf,
+  customFieldPatch,
   shownFields,
   valueKey,
   flattenTasks,
@@ -436,8 +437,6 @@ export class KanbanView implements SubView, KeyboardSurface {
     const custom = customFieldOf(field, this.filterContext.customFields)
     if (!custom) return null
     const next = custom.type === 'select' ? to : moveValue(groupValues(task, field, this.setup), from, to, keyOf)
-    const customFields = Object.fromEntries(Object.entries(task.customFields).filter(([id]) => id !== custom.id))
-    if (next.length) customFields[custom.id] = next
-    return { customFields }
+    return customFieldPatch(task, custom.id, next)
   }
 }

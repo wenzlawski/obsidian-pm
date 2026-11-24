@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  customFieldPatch,
   customOptionLabel,
   customOptionsText,
   isNumbered,
@@ -287,5 +288,33 @@ describe('numbered option text', () => {
   it('joins values, each numbered, a link shown as its note', () => {
     expect(customOptionsText(field, ['Done', '[[Review]]'])).toBe('3. Done, 2. Review')
     expect(customOptionsText(field, ['Gone'])).toBe('Gone')
+  })
+})
+
+describe('customFieldPatch', () => {
+  const task = makeTask({ customFields: { client: 'Acme', labels: ['a', 'b'] } })
+
+  it('sets the field and keeps the others', () => {
+    expect(customFieldPatch(task, 'client', 'Globex').customFields).toEqual({ client: 'Globex', labels: ['a', 'b'] })
+    expect(customFieldPatch(task, 'risk', ['high']).customFields).toEqual({
+      client: 'Acme',
+      labels: ['a', 'b'],
+      risk: ['high']
+    })
+  })
+
+  it('removes the field when the value is empty', () => {
+    expect(customFieldPatch(task, 'client', '').customFields).toEqual({ labels: ['a', 'b'] })
+    expect(customFieldPatch(task, 'labels', []).customFields).toEqual({ client: 'Acme' })
+  })
+
+  it('keeps a falsy value that is still a value', () => {
+    expect(customFieldPatch(task, 'done', false).customFields).toMatchObject({ done: false })
+    expect(customFieldPatch(task, 'count', 0).customFields).toMatchObject({ count: 0 })
+  })
+
+  it('leaves the task untouched', () => {
+    customFieldPatch(task, 'client', '')
+    expect(task.customFields.client).toBe('Acme')
   })
 })

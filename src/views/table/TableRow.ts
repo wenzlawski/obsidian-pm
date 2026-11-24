@@ -2,14 +2,13 @@ import { Menu, Notice, type App } from 'obsidian'
 import {
   t,
   getStatusConfig,
+  customFieldPatch,
   dueUrgency,
   effectiveCustomValue,
   formatDateLong,
   inheritedShare,
   isTerminalStatus,
   stringifyCustomValue,
-  customOptionsText,
-  isNumbered,
   type CustomFieldDef,
   type Project,
   totalLoggedHours
@@ -19,6 +18,8 @@ import {
   TaskRow,
   ActionsCell,
   AssigneesCell,
+  choiceFieldValue,
+  type ChoiceEdit,
   CustomFieldCell,
   type CustomFieldValue,
   DueDateCell,
@@ -160,11 +161,24 @@ export function renderTaskRow(tbody: HTMLElement, flat: TableTreeRow, ctx: Table
         new TimeCell(row, { logged: totalLoggedHours(task), estimate: task.timeEstimate ?? 0 })
         break
       default: {
-        const cf = customFields.find((field) => `cf:${field.id}` === column)
+        const shown = customFields.find((field) => `cf:${field.id}` === column)
+        // A view over several projects shows the union of their fields, but a value is
+        // only edited against the definition of the project it belongs to.
+        const own = shown && ctx.scope.configOf(task.id).customFields.find((field) => field.id === shown.id)
         const source = task.filePath ?? project.filePath
+        const cf = own ?? shown
+        // The picker edits what the task holds itself; a value an ancestor contributes is
+        // shown but never written to the task.
+        const edit: ChoiceEdit | undefined = own && {
+          own: stringValues(task.customFields[own.id]),
+          save: safeAsync(async (value: unknown) => {
+            await ctx.plugin.store.updateTask(project, task.id, customFieldPatch(task, own.id, value))
+            await ctx.onRefresh()
+          })
+        }
         new CustomFieldCell(
           row,
-          cf ? customFieldValue(ctx.plugin.app, cf, effectiveCustomValue(task, cf.id), source) : EMPTY,
+          cf ? customFieldValue(ctx.plugin.app, cf, effectiveCustomValue(task, cf.id), source, edit) : EMPTY,
           cf ? inheritedShare(task, cf.id) : 'none'
         )
       }
@@ -271,14 +285,28 @@ const EMPTY: CustomFieldValue = { kind: 'text', text: '' }
 
 const WIKILINK = /^\[\[.+\]\]$/
 
-/** A person is shown as the avatars assignees get; any other value naming a note, as that note. */
-function customFieldValue(app: App, cf: CustomFieldDef, val: unknown, sourcePath: string): CustomFieldValue {
-  const values = (Array.isArray(val) ? val : [val]).map(stringifyCustomValue).filter(Boolean)
+function stringValues(val: unknown): string[] {
+  return (Array.isArray(val) ? val : [val]).map(stringifyCustomValue).filter(Boolean)
+}
+
+/**
+ * A person is shown as the avatars assignees get; any other value naming a note, as that note.
+ * `edit` is given where the field can be changed in the cell.
+ */
+function customFieldValue(
+  app: App,
+  cf: CustomFieldDef,
+  val: unknown,
+  sourcePath: string,
+  edit?: ChoiceEdit
+): CustomFieldValue {
+  const values = stringValues(val)
+  const choice = choiceFieldValue(cf, values, edit)
+  if (choice) return choice
   if (cf.type === 'person') return { kind: 'people', people: linkedRefs(app, values, sourcePath) }
   if (cf.type === 'checkbox') return { kind: 'checkbox', checked: Boolean(val) }
   if (cf.type === 'url') return { kind: 'url', url: values.join(', ') }
   if (cf.type === 'date') return { kind: 'text', text: values.map((v) => formatDateLong(v) || v).join(', ') }
-  if (isNumbered(cf)) return { kind: 'text', text: customOptionsText(cf, values) }
   if (values.some((v) => WIKILINK.test(v.trim()))) {
     return { kind: 'links', links: linkedRefs(app, values, sourcePath) }
   }
