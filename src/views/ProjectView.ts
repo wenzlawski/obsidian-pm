@@ -96,6 +96,7 @@ import type { ExportViewState } from '../export/snapshot'
 import { GanttView } from './gantt/GanttView'
 import { KanbanView } from './KanbanView'
 import { openTaskModal } from '#ui/ModalFactory'
+import { newTaskDefaults, projectNamedByFilter } from '#ui/newTaskDefaults'
 import { exportViewAsHtml } from '../export/exportView'
 import { collapsedTaskIds, setAllCollapsed } from './collapse'
 import {
@@ -245,6 +246,7 @@ export class ProjectView extends ItemView {
         scope,
         refresh: () => this.refreshProject(),
         surface: () => this.currentSurface(),
+        filter: () => this.query.filter,
         activeId: () => snapshot?.activeId ?? this.currentSurface()?.activeId() ?? null,
         targetIds: () => snapshot?.targetIds ?? this.targetIds(),
         enqueue: (fn) => this.keyboard.enqueue(fn)
@@ -1569,14 +1571,15 @@ export class ProjectView extends ItemView {
     if (!scope?.primary) return
     const open = (project: Project): void => {
       openTaskModal(this.plugin, project, {
-        defaults,
+        defaults: newTaskDefaults(this.plugin, project, { filter: this.query.filter, defaults }),
         onSave: async () => {
           await this.refreshProject()
         }
       })
     }
-    if (!scope.isMulti) {
-      open(scope.primary)
+    const named = projectNamedByFilter(scope, this.query.filter)
+    if (named || !scope.isMulti) {
+      open(named ?? scope.primary)
       return
     }
     const menu = new Menu()

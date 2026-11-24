@@ -311,7 +311,7 @@ function renderWindowRows(ctx: TableContext): void {
   const addRow = tbody.createEl('tr', { cls: 'pm-table-add-row' })
   const addCell = addRow.createEl('td', { attr: { colspan: String(colCount) } })
   renderAddButton(addCell, t('task.add'), (e) => {
-    openAddTask(ctx.plugin, ctx.scope, { event: e, onSave: () => ctx.onRefresh() })
+    openAddTask(ctx.plugin, ctx.scope, { event: e, filter: ctx.state.query.filter, onSave: () => ctx.onRefresh() })
   })
 
   calibrateRowHeight(ctx)

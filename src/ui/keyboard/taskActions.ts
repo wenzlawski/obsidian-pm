@@ -3,6 +3,7 @@ import type PMPlugin from '#main'
 import {
   type CustomFieldChange,
   type CustomFieldDef,
+  type FilterState,
   type Project,
   type TagChange,
   type Task,
@@ -23,6 +24,7 @@ import {
   today
 } from '@dotpm/core'
 import { personKeyer, type ProjectRef, type ProjectScope } from '#store'
+import { newTaskDefaults, projectNamedByFilter } from '#ui/newTaskDefaults'
 import { safeAsync } from '@dotpm/ui'
 import {
   confirmDialog,
@@ -43,6 +45,8 @@ export interface TaskActionContext {
   scope: ProjectScope
   refresh: () => Promise<void>
   surface: () => KeyboardSurface | null
+  /** The view's filter, which a new task takes the fields it pins down from. */
+  filter?: () => FilterState
   activeId: () => string | null
   targetIds: () => string[]
   /** Runs a picker's mutation on the same queue as the key that opened it. */
@@ -157,17 +161,19 @@ async function patchTasks(
 function openNew(ctx: TaskActionContext, parentId: string | null): void {
   // A column's value comes from one project's palette, so a multi-project scope asks
   // which project first and starts from that project's defaults instead.
-  const defaults = ctx.scope.isMulti ? undefined : (ctx.surface()?.newTaskDefaults?.() ?? undefined)
+  const surfaceDefaults = ctx.scope.isMulti ? undefined : ctx.surface()?.newTaskDefaults?.()
+  const filter = ctx.filter?.()
   const open = (project: Project): void => {
     openTaskModal(ctx.plugin, project, {
-      defaults: defaults ?? undefined,
+      defaults: newTaskDefaults(ctx.plugin, project, { filter, defaults: surfaceDefaults, parentId }),
       parentId,
       onSave: ctx.refresh
     })
   }
-  if (!ctx.scope.isMulti) {
-    const primary = ctx.scope.primary
-    if (primary) open(primary)
+  const named = projectNamedByFilter(ctx.scope, filter)
+  if (named || !ctx.scope.isMulti) {
+    const project = named ?? ctx.scope.primary
+    if (project) open(project)
     return
   }
   const refs = ctx.scope.projects

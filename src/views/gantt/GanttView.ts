@@ -329,7 +329,7 @@ export class GanttView implements SubView, KeyboardSurface {
     const addRow = leftBody.createDiv('pm-gantt-label-row pm-gantt-add-row')
     addRow.style.height = `${this.cfg.rowHeight}px`
     renderAddButton(addRow, t('task.add'), (e) => {
-      openAddTask(this.plugin, this.scope, { event: e, onSave: () => this.onRefresh() })
+      openAddTask(this.plugin, this.scope, { event: e, filter: this.query.filter, onSave: () => this.onRefresh() })
     })
 
     // The right panel's horizontal scrollbar eats into its viewport height, letting it
