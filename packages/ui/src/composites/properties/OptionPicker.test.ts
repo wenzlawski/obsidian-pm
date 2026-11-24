@@ -13,8 +13,12 @@ function open(opts: Partial<OptionPickerOpts> = {}) {
 
 const rows = (): HTMLElement[] => Array.from(document.body.querySelectorAll<HTMLElement>('.pm-pop-item'))
 const labels = (): (string | null)[] => rows().map((r) => r.querySelector('.pm-pop-item-label')?.textContent ?? null)
+const escape = (): void => {
+  document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
+}
 
 afterEach(() => {
+  for (let i = 0; i < 10 && document.querySelector('.pm-pop'); i++) escape()
   document.body.empty()
 })
 
@@ -76,7 +80,70 @@ describe('openOptionPicker commit', () => {
     rows()[0].click()
     rows()[2].click()
     expect(onCommit).not.toHaveBeenCalled()
-    pop.close()
+    pop?.close()
     expect(onCommit).toHaveBeenCalledExactlyOnceWith(['a', 'c'])
+  })
+})
+
+describe('openOptionPicker on a button that has one open', () => {
+  const popovers = (): number => document.body.querySelectorAll('.pm-pop').length
+
+  it('closes the open picker instead of stacking another', () => {
+    const anchor = document.body.createEl('button')
+    const first = openOptionPicker({ anchor, options: OPTIONS, selected: [], onCommit: vi.fn<() => void>() })
+    expect(first).not.toBeNull()
+    expect(popovers()).toBe(1)
+    const second = openOptionPicker({ anchor, options: OPTIONS, selected: [], onCommit: vi.fn<() => void>() })
+    expect(second).toBeNull()
+    expect(popovers()).toBe(0)
+  })
+
+  it('never has more than one open however often the button is pressed', () => {
+    const anchor = document.body.createEl('button')
+    for (let i = 0; i < 7; i++) {
+      openOptionPicker({ anchor, options: OPTIONS, selected: [], onCommit: vi.fn<() => void>() })
+      expect(popovers()).toBe(i % 2 === 0 ? 1 : 0)
+    }
+  })
+
+  it('opens again once the picker was closed another way', () => {
+    const anchor = document.body.createEl('button')
+    openOptionPicker({ anchor, options: OPTIONS, selected: [], onCommit: vi.fn<() => void>() })
+    escape()
+    expect(popovers()).toBe(0)
+    expect(openOptionPicker({ anchor, options: OPTIONS, selected: [], onCommit: vi.fn<() => void>() })).not.toBeNull()
+    expect(popovers()).toBe(1)
+  })
+
+  it('commits a multiple choice when the button closes it', () => {
+    const anchor = document.body.createEl('button')
+    const onCommit = vi.fn<(selected: string[]) => void>()
+    openOptionPicker({ anchor, options: OPTIONS, selected: [], multiple: true, onCommit })
+    rows()[1].click()
+    openOptionPicker({ anchor, options: OPTIONS, selected: [], multiple: true, onCommit })
+    expect(onCommit).toHaveBeenCalledExactlyOnceWith(['b'])
+  })
+
+  it('leaves the pickers of other buttons alone', () => {
+    const one = document.body.createEl('button')
+    const two = document.body.createEl('button')
+    openOptionPicker({ anchor: one, options: OPTIONS, selected: [], onCommit: vi.fn<() => void>() })
+    openOptionPicker({ anchor: two, options: OPTIONS, selected: [], onCommit: vi.fn<() => void>() })
+    expect(popovers()).toBe(2)
+  })
+
+  it('lets a commit open the next picker on the same button', () => {
+    const anchor = document.body.createEl('button')
+    openOptionPicker({
+      anchor,
+      options: OPTIONS,
+      selected: [],
+      onCommit: () => {
+        openOptionPicker({ anchor, options: [{ id: 'x', label: 'x' }], selected: [], onCommit: vi.fn<() => void>() })
+      }
+    })
+    rows()[0].click()
+    expect(labels()).toEqual(['x'])
+    expect(popovers()).toBe(1)
   })
 })

@@ -64,6 +64,8 @@ export class Popover {
   /** Open popovers by the order they opened, so a modal can close the topmost one. */
   private static stack: Popover[] = []
   private static lastEscape = 0
+  /** The popover open on each anchor, so one trigger can never have two. */
+  private static byAnchor = new WeakMap<HTMLElement, Popover>()
 
   constructor(opts: PopoverOptions) {
     this.anchor = opts.anchor
@@ -110,6 +112,11 @@ export class Popover {
     return pop
   }
 
+  /** The popover open under `anchor`, if any. */
+  static openOn(anchor: HTMLElement): Popover | null {
+    return Popover.byAnchor.get(anchor) ?? null
+  }
+
   get isOpen(): boolean {
     return this.opened
   }
@@ -118,6 +125,7 @@ export class Popover {
     if (this.opened) return
     this.opened = true
     this.opener = this.doc.activeElement as HTMLElement | null
+    Popover.byAnchor.set(this.anchor, this)
     this.anchor.setAttribute('aria-expanded', 'true')
     this.host.appendChild(this.el)
     this.container = this.findContainer()
@@ -134,6 +142,8 @@ export class Popover {
   close(escaped = false): void {
     if (!this.opened) return
     this.opened = false
+    // Forgotten before `onClose` runs, so a popover opened from there takes the anchor over.
+    if (Popover.byAnchor.get(this.anchor) === this) Popover.byAnchor.delete(this.anchor)
     const hadFocus = this.el.contains(this.doc.activeElement)
     this.anchor.setAttribute('aria-expanded', 'false')
     this.doc.removeEventListener('mousedown', this.onOutsideDown, true)

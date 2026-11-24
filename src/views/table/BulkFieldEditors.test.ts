@@ -83,6 +83,40 @@ describe('bulk property picker', () => {
   })
 })
 
+describe('bulk property picker on its button', () => {
+  const popovers = (): number => document.body.querySelectorAll('.pm-pop').length
+  const press = (anchor: HTMLElement): void => {
+    openBulkPropertyPicker(makeCtx(), anchor, vi.fn<() => void>())
+  }
+
+  it('toggles instead of stacking pickers when the button is pressed repeatedly', () => {
+    const anchor = document.body.createEl('button')
+    for (let i = 0; i < 6; i++) {
+      press(anchor)
+      expect(popovers()).toBe(i % 2 === 0 ? 1 : 0)
+    }
+  })
+
+  it('closes the editor of a field when the button is pressed again, without opening a new picker', () => {
+    const anchor = document.body.createEl('button')
+    press(anchor)
+    click('Client')
+    expect(labels()).toEqual(['Clear value', 'Acme', 'Globex'])
+    press(anchor)
+    expect(popovers()).toBe(0)
+  })
+
+  it('opens the list of fields again after that', () => {
+    const anchor = document.body.createEl('button')
+    press(anchor)
+    click('Client')
+    press(anchor)
+    press(anchor)
+    expect(labels()).toEqual(FIELDS.map((f) => f.name))
+    expect(popovers()).toBe(1)
+  })
+})
+
 describe('bulk field editors', () => {
   it('sets a select to the option picked', () => {
     const applied = openEditor('Client')
