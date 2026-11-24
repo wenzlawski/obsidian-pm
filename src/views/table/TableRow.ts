@@ -39,6 +39,7 @@ import { buildTaskContextMenu } from '#ui/TaskContextMenu'
 import { reorderTask } from '#ui/reorderTask'
 import { toggleCollapsed } from '../collapse'
 import { linkedRefs } from '../linkedRefs'
+import { scrollRowIntoView, stickyHeaderHeight } from './scrollRow'
 
 export function renderTaskRow(tbody: HTMLElement, flat: TableTreeRow, ctx: TableContext): void {
   const { task, depth } = flat
@@ -345,14 +346,13 @@ export function updateSelectedRow(state: TableState): void {
     // Row is outside the virtual window: scroll it into range and re-render.
     const idx = state.visibleRows.findIndex((f) => f.task.id === state.selectedTaskId)
     if (idx === -1) return
-    const thead = state.wrapper.querySelector('thead')
-    const headerHeight = thead instanceof HTMLElement ? thead.offsetHeight : 0
+    const headerHeight = stickyHeaderHeight(state.wrapper)
     state.wrapper.scrollTop = Math.max(0, idx * state.rowHeight + headerHeight - state.wrapper.clientHeight / 2)
     state.renderWindow()
     row = state.tableBody.querySelector(`tr[data-task-id="${state.selectedTaskId}"]`)
   }
   if (row) {
     row.addClass('pm-table-row--selected')
-    ;(row as HTMLElement).scrollIntoView({ block: 'nearest' })
+    scrollRowIntoView(state.wrapper, row as HTMLElement)
   }
 }

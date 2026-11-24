@@ -120,6 +120,8 @@ button.pm-chip-btn--active:hover {
 .pm-table-wrapper {
   flex: 1;
   overflow: auto;
+  /* Set from the header's measured height, so a row scrolled into view stops below it. */
+  scroll-padding-top: var(--pm-table-header-height, 0px);
 }
 
 .pm-table {
