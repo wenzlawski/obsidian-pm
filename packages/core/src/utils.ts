@@ -160,6 +160,8 @@ export type CustomFieldChange =
   | { mode: 'set'; value: unknown }
   /** Every task gains these values next to the ones it has, as tags are added. */
   | { mode: 'add'; values: string[] }
+  /** Every task loses these values and keeps the rest, as a tag is taken off. */
+  | { mode: 'remove'; values: string[] }
   | { mode: 'clear' }
 
 /**
@@ -182,6 +184,13 @@ export function applyCustomFieldChange(
       const gained = change.values.filter((value) => !held.includes(value))
       if (gained.length === 0) return null
       next = [...held, ...gained]
+      break
+    }
+    case 'remove': {
+      const held = (Array.isArray(current) ? current : [current]).map(stringifyCustomValue).filter(Boolean)
+      const kept = held.filter((value) => !change.values.includes(value))
+      if (kept.length === held.length) return null
+      next = kept
       break
     }
     case 'clear':

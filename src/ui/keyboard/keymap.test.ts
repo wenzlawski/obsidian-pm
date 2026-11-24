@@ -53,6 +53,22 @@ describe('keymap', () => {
     expect(isActionAvailable('startDate', surface(null))).toBe(false)
   })
 
+  it('sets a custom property on c, on tasks only, and needs a target', () => {
+    for (const context of ['table', 'board', 'timeline'] as const) {
+      expect(resolveAction(context, 'c')).toBe('property')
+    }
+    expect(resolveAction('projects', 'c')).toBeNull()
+    expect(actionLabel('property', 'table')).toBe('Set property')
+    const surface = (activeId: string | null): KeyboardSurface => ({
+      context: 'table',
+      groups: () => [['a']],
+      activeId: () => activeId,
+      setActive: () => {}
+    })
+    expect(isActionAvailable('property', surface('a'))).toBe(true)
+    expect(isActionAvailable('property', surface(null))).toBe(false)
+  })
+
   it('moves a task up and down on Alt+Up and Alt+Down, in the table only', () => {
     expect(resolveAction('table', 'Alt+ArrowUp')).toBe('moveUp')
     expect(resolveAction('table', 'Alt+ArrowDown')).toBe('moveDown')

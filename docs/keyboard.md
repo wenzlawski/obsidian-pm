@@ -33,6 +33,7 @@ shortcuts sheet leaves it out.
 | `a` | Assign people |
 | `d` / `Shift+D` | Set the due date / the start date |
 | `#` | Add or remove a tag, or clear them |
+| `c` | Set a custom property: pick the property, then a value (or clear it) |
 | `m` | Move to a project, set a parent, or remove it |
 | `Mod+D` | Duplicate |
 | `u` | Archive or unarchive |
@@ -63,7 +64,13 @@ On the project list, `o` opens the project overview and `e` edits the project. O
 project's overview page, `Enter` opens its tasks, `e` edits the project, `o` opens the
 Markdown note, and `n` adds a task.
 
-Field changes made with keys (`x`, `s`, `p`, `a`, `d`, `#`) and moving a row with `Alt+↑` / `Alt+↓` go on the plugin's undo
+`c` first asks which custom property to change, then offers what its type calls for: the
+options of a select, people, checked or unchecked, a date, or a typed value for a number,
+text or link. A multi-select works like tags, with "Add" and "Remove" for each option.
+"Clear value" is offered while a task has something to clear. With several tasks selected,
+the change goes to all of them, and tasks whose project does not define the property are left alone.
+
+Field changes made with keys (`x`, `s`, `p`, `a`, `d`, `#`, `c`) and moving a row with `Alt+↑` / `Alt+↓` go on the plugin's undo
 stack. Deleting always asks first. Moving a task to another project or parent is not
 undoable, just as it is not from the context menu; a task moved to another project
 starts there as a top-level task. Keys in a text field, a popover, a menu

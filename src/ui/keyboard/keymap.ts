@@ -28,6 +28,7 @@ export type ActionId =
   | 'due'
   | 'startDate'
   | 'tags'
+  | 'property'
   | 'move'
   | 'duplicate'
   | 'archive'
@@ -100,6 +101,7 @@ export const ACTION_LABELS: Record<ActionId, MessageKey> = {
   due: 'keyboard.due',
   startDate: 'keyboard.start',
   tags: 'keyboard.tags',
+  property: 'keyboard.property',
   move: 'keyboard.move',
   duplicate: 'taskMenu.duplicate',
   archive: 'keyboard.archive',
@@ -171,6 +173,7 @@ export const ACTION_SECTIONS: Record<ActionId, KeyboardSection> = {
   due: 'tasks',
   startDate: 'tasks',
   tags: 'tasks',
+  property: 'tasks',
   move: 'tasks',
   duplicate: 'tasks',
   archive: 'tasks',
@@ -225,6 +228,7 @@ const TASK_ACTIONS: Binding[] = [
   { keys: ['d'], action: 'due' },
   { keys: ['Shift+D'], action: 'startDate' },
   { keys: ['#'], action: 'tags' },
+  { keys: ['c'], action: 'property' },
   { keys: ['m'], action: 'move' },
   { keys: ['Mod+D'], action: 'duplicate' },
   { keys: ['u'], action: 'archive' },
@@ -325,6 +329,7 @@ const NEEDS_TARGET = new Set<ActionId>([
   'due',
   'startDate',
   'tags',
+  'property',
   'move',
   'archive',
   'delete'
