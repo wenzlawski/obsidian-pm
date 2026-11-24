@@ -350,6 +350,23 @@ describe('applyCustomFieldChange', () => {
     ])
   })
 
+  it('removes values and keeps the others', () => {
+    expect(applyCustomFieldChange(task, 'labels', { mode: 'remove', values: ['a'] })?.customFields.labels).toEqual([
+      'b'
+    ])
+    expect(applyCustomFieldChange(task, 'client', { mode: 'remove', values: ['Acme'] })?.customFields).toEqual({
+      labels: ['a', 'b'],
+      size: 3
+    })
+  })
+
+  it('drops the key once every value is removed', () => {
+    expect(applyCustomFieldChange(task, 'labels', { mode: 'remove', values: ['a', 'b'] })?.customFields).toEqual({
+      client: 'Acme',
+      size: 3
+    })
+  })
+
   it('clears a field by dropping its key', () => {
     expect(applyCustomFieldChange(task, 'labels', { mode: 'clear' })?.customFields).toEqual({ client: 'Acme', size: 3 })
   })
@@ -357,6 +374,8 @@ describe('applyCustomFieldChange', () => {
   it('leaves a task alone when it already ends up as asked', () => {
     expect(applyCustomFieldChange(task, 'client', { mode: 'set', value: 'Acme' })).toBeNull()
     expect(applyCustomFieldChange(task, 'labels', { mode: 'add', values: ['a'] })).toBeNull()
+    expect(applyCustomFieldChange(task, 'labels', { mode: 'remove', values: ['z'] })).toBeNull()
+    expect(applyCustomFieldChange(task, 'missing', { mode: 'remove', values: ['z'] })).toBeNull()
     expect(applyCustomFieldChange(task, 'missing', { mode: 'clear' })).toBeNull()
     expect(applyCustomFieldChange(task, 'size', { mode: 'set', value: 3 })).toBeNull()
   })

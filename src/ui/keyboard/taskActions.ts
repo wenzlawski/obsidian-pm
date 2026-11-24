@@ -1,9 +1,12 @@
 import { Notice } from 'obsidian'
 import type PMPlugin from '#main'
 import {
+  type CustomFieldChange,
+  type CustomFieldDef,
   type Project,
   type TagChange,
   type Task,
+  applyCustomFieldChange,
   applyTagChange,
   collectAllAssignees,
   collectAllTags,
@@ -30,6 +33,7 @@ import {
   promptText
 } from '#ui/ModalFactory'
 import { openChoice, type Choice } from './choice'
+import { fieldChoices, heldValues, propertyChoices } from './propertyChoices'
 import { tagChoices } from './tagChoices'
 import type { ActionHandlers } from './keymap'
 import type { KeyboardSurface } from './types'
@@ -256,28 +260,34 @@ function askDate(ctx: TaskActionContext, entries: TaskEntry[], { field, title, c
     )
   }
   openChoice(ctx.plugin.app, title, choices, (value) => {
-    if (value !== '__pick') {
-      apply(value)
-      return
-    }
-    void safeAsync(async () => {
-      const typed = await promptText(ctx.plugin.app, title, 'YYYY-MM-DD', now.toString())
-      if (typed === null) return
-      const date = parsePlainDate(typed.trim())
-      if (!date) {
-        new Notice(t('keyboard.invalidDate'))
-        return
-      }
-      apply(date.toString())
-    })()
+    if (value === '__pick') promptDate(ctx, title, apply)
+    else apply(value)
   })
 }
 
-function askAssignee(ctx: TaskActionContext, entries: TaskEntry[]): void {
-  const people = dedupePeople(
+/** A typed date, starting from today. A value that is not a date is refused with a notice. */
+function promptDate(ctx: TaskActionContext, title: string, apply: (date: string) => void): void {
+  void safeAsync(async () => {
+    const typed = await promptText(ctx.plugin.app, title, 'YYYY-MM-DD', today().toString())
+    if (typed === null) return
+    const date = parsePlainDate(typed.trim())
+    if (!date) {
+      new Notice(t('keyboard.invalidDate'))
+      return
+    }
+    apply(date.toString())
+  })()
+}
+
+function knownPeople(ctx: TaskActionContext): string[] {
+  return dedupePeople(
     [...ctx.plugin.settings.globalTeamMembers, ...ctx.scope.teamMembers(), ...collectAllAssignees(ctx.scope.tasks())],
     personKeyer(ctx.plugin.app)
   )
+}
+
+function askAssignee(ctx: TaskActionContext, entries: TaskEntry[]): void {
+  const people = knownPeople(ctx)
   const choices: Choice<string>[] = people.map((person) => ({
     label: displayName(person),
     value: person
@@ -319,6 +329,59 @@ function askTag(ctx: TaskActionContext, entries: TaskEntry[]): void {
           if (typed?.trim()) apply({ add: [typed.trim().replace(/^#/, '')], remove: [] })
         })()
     }
+  })
+}
+
+/** The properties a change can be offered for: those that a target task's project defines. */
+function editableFields(ctx: TaskActionContext, entries: TaskEntry[]): CustomFieldDef[] {
+  const defined = new Set(
+    entries.flatMap((entry) => ctx.plugin.store.configFor(entry.project).customFields.map((field) => field.id))
+  )
+  return ctx.scope.customFields().filter((field) => defined.has(field.id))
+}
+
+/** First choose the property, then change it the way its type calls for. */
+function askProperty(ctx: TaskActionContext, entries: TaskEntry[]): void {
+  const fields = editableFields(ctx, entries)
+  if (!fields.length) {
+    new Notice(t('keyboard.noProperties'))
+    return
+  }
+  openChoice(ctx.plugin.app, t('keyboard.property'), fieldChoices(fields), (field) => {
+    const apply = (change: CustomFieldChange): void => {
+      ctx.enqueue(() =>
+        patchTasks(ctx, entries, (task, project) =>
+          // A selection can span projects that do not all define the property; those are left alone.
+          ctx.plugin.store.configFor(project).customFields.some((def) => def.id === field.id)
+            ? applyCustomFieldChange(task, field.id, change)
+            : null
+        )
+      )
+    }
+    const tasks = entries.map((entry) => entry.task)
+    openChoice(ctx.plugin.app, field.name, propertyChoices(field, tasks, knownPeople(ctx)), (choice) => {
+      switch (choice.op) {
+        case 'change':
+          apply(choice.change)
+          return
+        case 'pickDate':
+          promptDate(ctx, field.name, (value) => apply({ mode: 'set', value }))
+          return
+        case 'enter':
+          void safeAsync(async () => {
+            const current = tasks.length === 1 ? heldValues(tasks[0], field.id).join(', ') : ''
+            const text = await promptText(ctx.plugin.app, t('bulk.enterValue', { name: field.name }), '', current)
+            if (text === null) return
+            if (field.type !== 'number') {
+              apply({ mode: 'set', value: text.trim() })
+              return
+            }
+            const value = parseFloat(text)
+            if (Number.isNaN(value)) new Notice(t('bulk.notANumber', { value: text }))
+            else apply({ mode: 'set', value })
+          })()
+      }
+    })
   })
 }
 
@@ -439,6 +502,11 @@ export function taskActionHandlers(ctx: TaskActionContext): ActionHandlers {
     tags: () => {
       const entries = targetEntries(ctx)
       if (entries.length) askTag(ctx, entries)
+    },
+
+    property: () => {
+      const entries = targetEntries(ctx)
+      if (entries.length) askProperty(ctx, entries)
     },
 
     move: () => {
