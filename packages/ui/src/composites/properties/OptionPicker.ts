@@ -29,8 +29,16 @@ const SEARCH_ABOVE = 7
  * room for a control of its own, such as a table cell. Nothing is committed while a
  * multiple choice is being made: the caller redraws once, when the picker closes, instead
  * of under the open popover.
+ *
+ * A trigger shows one picker at a time. Pressing it while its picker is open closes that
+ * picker, as pressing a toggle does, and returns null rather than opening another.
  */
-export function openOptionPicker(opts: OptionPickerOpts): Popover {
+export function openOptionPicker(opts: OptionPickerOpts): Popover | null {
+  const open = Popover.openOn(opts.anchor)
+  if (open) {
+    open.close()
+    return null
+  }
   let current = [...opts.selected]
   // A value the list no longer offers stays pickable, so it can still be taken off.
   const known = new Set(opts.options.map((o) => o.id))

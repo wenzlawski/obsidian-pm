@@ -2,7 +2,6 @@ import { t, type CustomFieldDef } from '@dotpm/core'
 import { setIcon } from '#platform'
 import { AvatarStack, type AvatarPerson } from '#primitives/AvatarStack'
 import { makeActivatable } from '#dom'
-import type { Popover } from '#primitives/Popover'
 import { openOptionPicker } from '../properties/OptionPicker'
 import type { SelectItem } from '../properties/optionList'
 
@@ -95,15 +94,10 @@ export class CustomFieldCell {
     if (!onChange) return
     el.addClass('pm-cf-value--editable')
     el.setAttr('aria-haspopup', 'true')
-    let picker: Popover | null = null
     makeActivatable(
       el,
       () => {
-        if (picker?.isOpen) {
-          picker.close()
-          return
-        }
-        picker = openOptionPicker({
+        openOptionPicker({
           anchor: el,
           options: value.options,
           selected: value.values,
