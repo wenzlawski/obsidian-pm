@@ -1,5 +1,13 @@
 import { Notice } from 'obsidian'
-import { type CustomFieldChange, type CustomFieldDef, collectAllAssignees, displayName, t, today } from '@dotpm/core'
+import {
+  type CustomFieldChange,
+  type CustomFieldDef,
+  collectAllAssignees,
+  customOptionLabel,
+  displayName,
+  t,
+  today
+} from '@dotpm/core'
 import { openOptionPicker, safeAsync, type SelectItem } from '@dotpm/ui'
 import { promptText } from '#ui/ModalFactory'
 import { peopleSource } from '#ui/PersonPicker'
