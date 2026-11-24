@@ -9,7 +9,8 @@ import {
   type PriorityIconSet,
   type StatusConfig,
   type Project,
-  type FlatTask,
+  type TaskTreeRow,
+  arrangeTaskRows,
   type ViewFields,
   SORT_KEYS,
   columnWidth,
@@ -22,16 +23,11 @@ import {
   t
 } from '@dotpm/core'
 import { personKeyer, type ProjectScope } from '#store'
-import { renderAddButton, childTreeGuides, compareTasks } from '@dotpm/ui'
+import { renderAddButton, compareTasks } from '@dotpm/ui'
 import { openAddTask } from '../addTask'
 import { renderTaskRow, updateSelectAllCheckbox } from './TableRow'
 
-/** A display row plus what the tree connectors need to know about its siblings. */
-export interface TableTreeRow extends FlatTask {
-  /** One entry per indent column: does an ancestor at that column still have rows below it. */
-  guides: boolean[]
-  isLastChild: boolean
-}
+export type TableTreeRow = TaskTreeRow
 
 export interface TableState {
   sort: SortRule[]
@@ -259,45 +255,10 @@ function fillTableBody(ctx: TableContext): void {
   // rebuilding the table around it.
   ctx.state.wrapper?.setAttr('data-borders', ctx.lineBorders)
 
-  let flat = flattenTasks(ctx.scope.tasks(), ctx.collapsedIds)
+  const all = flattenTasks(ctx.scope.tasks(), ctx.collapsedIds)
   const hasActiveFilter = isQueryActive(ctx.state.query)
-  flat = applyTaskFilterFlat(flat, ctx.state.query, ctx.scope.filterContext(personKeyer(ctx.plugin.app)))
-
-  const filteredIds = new Set(flat.map((f) => f.task.id))
-
-  // Group by parentId once, O(N), promoting orphans whose parent was filtered out.
-  const childrenByParent = new Map<string | null, FlatTask[]>()
-  for (const f of flat) {
-    let bucket: string | null
-    if (f.parentId === null) {
-      bucket = null
-    } else if (hasActiveFilter && !filteredIds.has(f.parentId)) {
-      bucket = null
-    } else {
-      bucket = f.parentId
-    }
-    let list = childrenByParent.get(bucket)
-    if (!list) {
-      list = []
-      childrenByParent.set(bucket, list)
-    }
-    list.push(f)
-  }
-  for (const list of childrenByParent.values()) {
-    list.sort((a, b) => compareTasks(a.task, b.task, ctx.state.sort, ctx.statuses, ctx.priorities))
-  }
-
-  const sorted: TableTreeRow[] = []
-  const addWithChildren = (parentId: string | null, trail: boolean[]) => {
-    const items = childrenByParent.get(parentId)
-    if (!items) return
-    items.forEach((item, i) => {
-      const isLastChild = i === items.length - 1
-      sorted.push({ ...item, guides: padGuides(trail, item.depth), isLastChild })
-      addWithChildren(item.task.id, childTreeGuides(trail, isLastChild))
-    })
-  }
-  addWithChildren(null, [])
+  const shown = applyTaskFilterFlat(all, ctx.state.query, ctx.scope.filterContext(personKeyer(ctx.plugin.app)))
+  const sorted = arrangeTaskRows(all, shown, (a, b) => compareTasks(a, b, ctx.state.sort, ctx.statuses, ctx.priorities))
 
   // When filtering, show all matches regardless of collapsed parent.
   ctx.state.visibleRows = hasActiveFilter ? sorted : sorted.filter((f) => f.visible)
@@ -306,16 +267,6 @@ function fillTableBody(ctx: TableContext): void {
   ctx.state.windowStart = -1
   ctx.state.windowEnd = -1
   renderWindowRows(ctx)
-}
-
-/**
- * Rows keep their original tree depth for indentation, but a filter can promote a task
- * whose parent was filtered out to the top of the display list. Padding to `depth` keeps
- * the connectors under the title they belong to and leaves the promoted gap blank.
- */
-function padGuides(trail: boolean[], depth: number): boolean[] {
-  if (trail.length >= depth) return trail.slice(0, depth)
-  return [...Array.from<boolean>({ length: depth - trail.length }).fill(false), ...trail]
 }
 
 const ROW_OVERSCAN = 8

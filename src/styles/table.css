@@ -315,6 +315,19 @@ button.pm-chip-btn--active:hover {
   color: var(--interactive-accent);
 }
 
+/* Stands in for the tree connector when a filter hides the parent a subtask hangs under. */
+.pm-task-parent-hint {
+  color: var(--text-faint);
+  font-size: var(--font-ui-smaller);
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.pm-task-parent-hint::before {
+  content: '\21b3\00a0';
+}
+
 .pm-table-tags {
   display: flex;
   gap: 4px;

@@ -258,6 +258,7 @@ function renderTitleCell(row: HTMLElement, flat: TableTreeRow, project: Project,
     task,
     treeGuides: ctx.showSubtreeConnections ? flat.guides : null,
     isLastChild: flat.isLastChild,
+    detachedFrom: flat.detachedFrom,
     showTagColors: ctx.plugin.settings.showTagColors,
     onTitleClick: () => {
       openTaskModal(ctx.plugin, project, {
