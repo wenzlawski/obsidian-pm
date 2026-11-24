@@ -5,6 +5,7 @@ import {
   columnWidth,
   defaultFields,
   hiddenFields,
+  isCompact,
   legacyBoardFields,
   shownFields,
   tidyFields,
@@ -62,6 +63,16 @@ describe('view fields', () => {
     const fields: ViewFields = { table: { visible: defaultFields('table', one), widths: { due: 90 } } }
     tidyFields(fields, one)
     expect(fields.table?.widths).toEqual({ due: 90 })
+  })
+
+  it('keeps a mode that only went compact, and drops it once it is not', () => {
+    const fields: ViewFields = { table: { visible: defaultFields('table', one), compact: true } }
+    tidyFields(fields, one)
+    expect(isCompact(fields, 'table')).toBe(true)
+    expect(isCompact(fields, 'kanban')).toBe(false)
+    fields.table = { visible: defaultFields('table', one), compact: false }
+    tidyFields(fields, one)
+    expect(fields).toEqual({})
   })
 
   it('turns the old board settings into card fields', () => {

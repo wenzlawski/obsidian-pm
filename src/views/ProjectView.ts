@@ -1352,7 +1352,7 @@ export class ProjectView extends ItemView {
     if (fields.table) delete fields.table.widths
     if (widths && this.projectScope) {
       const visible = shownFields(this.fields, 'table', this.projectScope.fieldCatalog())
-      fields.table = { visible: fields.table?.visible ?? visible, widths }
+      fields.table = { ...fields.table, visible: fields.table?.visible ?? visible, widths }
     }
     return fields
   }

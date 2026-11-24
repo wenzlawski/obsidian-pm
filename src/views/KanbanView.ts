@@ -11,6 +11,7 @@ import {
   type ViewFields,
   customFieldOf,
   customFieldPatch,
+  isCompact,
   shownFields,
   valueKey,
   flattenTasks,
@@ -268,6 +269,7 @@ export class KanbanView implements SubView, KeyboardSurface {
     this.cardFields = shownFields(this.fields, 'kanban', this.scope.fieldCatalog())
     this.container.empty()
     this.container.addClass('pm-kanban-view')
+    this.container.toggleClass('pm-kanban-view--compact', isCompact(this.fields, 'kanban'))
 
     const board = this.container.createDiv('pm-kanban-board')
     const columns = boardColumns(this.setup, this.group, this.visibleTasks())

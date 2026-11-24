@@ -576,3 +576,36 @@ button.pm-chip-rm {
 .pm-table-row--drop-after > td {
   box-shadow: inset 0 -2px 0 var(--interactive-accent);
 }
+
+/* Compact: tighter cells and smaller controls, so more rows fit. */
+.pm-table-wrapper--compact .pm-table {
+  font-size: 12px;
+}
+.pm-table-wrapper--compact thead th {
+  padding: 5px 8px;
+}
+.pm-table-wrapper--compact .pm-table-cell {
+  padding: 3px 8px;
+}
+.pm-table-wrapper--compact .pm-table-cell-title {
+  padding: 3px 8px 3px calc(var(--depth, 0) * var(--pm-tree-indent) + 6px);
+}
+.pm-table-wrapper--compact .pm-table-title-inner {
+  gap: 6px;
+}
+.pm-table-wrapper--compact .pm-collapse-toggle {
+  width: 20px;
+  height: 20px;
+}
+.pm-table-wrapper--compact .pm-avatar {
+  width: 20px;
+  height: 20px;
+  font-size: 9px;
+}
+.pm-table-wrapper--compact .pm-avatar--sm {
+  width: 18px;
+  height: 18px;
+}
+.pm-table-wrapper--compact .pm-table-add-row td {
+  padding: 4px 8px;
+}

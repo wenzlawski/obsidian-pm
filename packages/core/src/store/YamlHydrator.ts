@@ -184,6 +184,7 @@ export function hydrateFields(raw: unknown): ViewFields {
       )
       if (widths.length) list.widths = Object.fromEntries(widths.map(([id, px]) => [id, Math.round(px)]))
     }
+    if (e.compact === true) list.compact = true
     fields[mode] = list
   }
   return fields

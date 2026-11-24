@@ -7,8 +7,7 @@ import {
   renderPriorityIndicator,
   renderProjectChip,
   renderStatusDot,
-  safeAsync,
-  ROW_HEIGHT
+  safeAsync
 } from '@dotpm/ui'
 import type PMPlugin from '#main'
 import { type StatusConfig, type Task, t, tn } from '@dotpm/core'
@@ -17,6 +16,7 @@ import { openTaskByPath, openTaskModal } from '#ui/ModalFactory'
 import { toggleCollapsed } from '../collapse'
 
 export interface LabelContext {
+  rowHeight: number
   plugin: PMPlugin
   scope: ProjectScope
   statuses: StatusConfig[]
@@ -36,7 +36,7 @@ export function renderTaskLabel(
   const project = ctx.scope.projectOf(task.id)
   if (!project) return
   const el = container.createDiv('pm-gantt-label-row')
-  el.style.height = `${ROW_HEIGHT}px`
+  el.style.height = `${ctx.rowHeight}px`
   el.style.paddingLeft = `${depth * 18 + 8}px`
   el.dataset.taskId = task.id
 

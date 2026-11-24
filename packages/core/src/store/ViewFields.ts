@@ -85,18 +85,24 @@ export function columnWidth(fields: ViewFields, id: string): number | undefined 
   return fields.table?.widths?.[id] ?? DEFAULT_COLUMN_WIDTHS[id] ?? CUSTOM_COLUMN_WIDTH
 }
 
+/** Whether `mode` is drawn tighter. Each mode keeps its own setting. */
+export function isCompact(fields: ViewFields, mode: ViewMode): boolean {
+  return fields[mode]?.compact === true
+}
+
 /**
- * Drops a mode that shows its defaults at default widths, so a view whose fields were
- * changed and changed back compares equal to one never touched.
+ * Drops a mode that shows its defaults at default widths and isn't compact, so a view whose
+ * fields were changed and changed back compares equal to one never touched.
  */
 export function tidyFields(fields: ViewFields, catalog: FieldCatalog): void {
   for (const mode of Object.keys(fields) as ViewMode[]) {
     const list = fields[mode] as FieldList
     if (list.widths && !Object.keys(list.widths).length) delete list.widths
+    if (!list.compact) delete list.compact
     const shown = shownFields(fields, mode, catalog)
     const defaults = shownFields({}, mode, catalog)
     const isDefault = shown.length === defaults.length && shown.every((id, i) => id === defaults[i])
-    if (isDefault && !list.widths) Reflect.deleteProperty(fields, mode)
+    if (isDefault && !list.widths && !list.compact) Reflect.deleteProperty(fields, mode)
   }
 }
 

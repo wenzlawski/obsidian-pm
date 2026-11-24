@@ -8,6 +8,7 @@ import {
   formatDateLong,
   getStatusConfig,
   inheritedShare,
+  isCompact,
   isQueryActive,
   isTerminalStatus,
   columnWidth,
@@ -110,6 +111,7 @@ export function renderSnapshotTable(container: HTMLElement, model: ViewModel): H
 
   const wrapper = container.createDiv('pm-table-wrapper')
   wrapper.setAttr('data-borders', model.settings.lineBorders)
+  if (isCompact(model.fields, 'table')) wrapper.addClass('pm-table-wrapper--compact')
   const table = wrapper.createEl('table', { cls: 'pm-table' })
   const hrow = table.createEl('thead').createEl('tr')
 

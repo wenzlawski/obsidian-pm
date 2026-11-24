@@ -13,7 +13,7 @@ import {
 import { cardCustomValues } from '../views/boardCards'
 import { svgEl } from '#dom'
 import type { GanttCanvas } from './canvas'
-import { BAR_BORDER_RADIUS, BAR_PADDING, HEADER_HEIGHT, ROW_HEIGHT, dateToX } from './TimelineConfig'
+import { BAR_BORDER_RADIUS, HEADER_HEIGHT, ROW_HEIGHT, dateToX } from './TimelineConfig'
 
 /** One drawn row: the task and where it sits, top to bottom. */
 export interface GanttRow {
@@ -33,9 +33,9 @@ export function drawRowHover(g: SVGGElement, canvas: GanttCanvas, row: number): 
   g.appendChild(
     svgEl('rect', {
       x: 0,
-      y: HEADER_HEIGHT + row * ROW_HEIGHT,
+      y: HEADER_HEIGHT + row * canvas.cfg.rowHeight,
       width: canvas.cfg.totalWidth,
-      height: ROW_HEIGHT,
+      height: canvas.cfg.rowHeight,
       class: 'pm-gantt-row-hover'
     })
   )
@@ -98,8 +98,11 @@ export function drawTaskBar(
   if (!effectiveStart) return null
   const effectiveEnd = (endDate ?? effectiveStart).add({ days: 1 })
 
-  const y = HEADER_HEIGHT + row * ROW_HEIGHT + BAR_PADDING
-  const height = ROW_HEIGHT - BAR_PADDING * 2
+  const { rowHeight, barPadding } = canvas.cfg
+  const y = HEADER_HEIGHT + row * rowHeight + barPadding
+  const height = rowHeight - barPadding * 2
+  // Text sits a little below the bar's middle, less so on a slim bar.
+  const textDy = rowHeight < ROW_HEIGHT ? 1 : 5
   const x = Math.max(0, dateToX(canvas.cfg, effectiveStart))
   const xEnd = Math.min(canvas.cfg.totalWidth, dateToX(canvas.cfg, effectiveEnd))
   const width = Math.max(8, xEnd - x)
@@ -138,7 +141,7 @@ export function drawTaskBar(
 
   let asideX = x + width + 6
   if (task.recurrence) {
-    const icon = svgEl('text', { x: x + width + 4, y: y + height / 2 + 5, class: 'pm-gantt-bar-icon' })
+    const icon = svgEl('text', { x: x + width + 4, y: y + height / 2 + textDy, class: 'pm-gantt-bar-icon' })
     icon.textContent = t('chip.recurring')
     barGroup.appendChild(icon)
     asideX += 20
@@ -150,7 +153,7 @@ export function drawTaskBar(
   }
 
   if (width > 55) {
-    const label = svgEl('text', { x: x + 8, y: y + height / 2 + 5, class: 'pm-gantt-bar-label' })
+    const label = svgEl('text', { x: x + 8, y: y + height / 2 + textDy, class: 'pm-gantt-bar-label' })
     const maxChars = Math.max(4, Math.floor((width - 16) / 7.5))
     label.textContent = task.title.length > maxChars ? task.title.slice(0, maxChars - 1) + '…' : task.title
     barGroup.appendChild(label)
@@ -183,8 +186,9 @@ export function drawMilestoneDiamond(
   const date = parsePlainDate(task.due) ?? parsePlainDate(task.start)
   if (!date) return null
   const cx = dateToX(canvas.cfg, date) + canvas.cfg.dayWidth / 2
-  const cy = HEADER_HEIGHT + row * ROW_HEIGHT + ROW_HEIGHT / 2
-  const size = 12
+  const { rowHeight } = canvas.cfg
+  const cy = HEADER_HEIGHT + row * rowHeight + rowHeight / 2
+  const size = Math.min(12, rowHeight / 2 - 3)
   const diamond = svgEl('polygon', {
     points: `${cx},${cy - size} ${cx + size},${cy} ${cx},${cy + size} ${cx - size},${cy}`,
     fill: color,
@@ -205,7 +209,7 @@ export function drawMilestoneLabels(canvas: GanttCanvas, statuses: StatusConfig[
   if (!milestones.length) return
 
   const linesG = svgEl('g', { class: 'pm-gantt-milestone-labels' })
-  const totalH = HEADER_HEIGHT + rows.length * ROW_HEIGHT
+  const totalH = HEADER_HEIGHT + rows.length * canvas.cfg.rowHeight
 
   for (const { task } of milestones) {
     const date = parsePlainDate(task.due) ?? parsePlainDate(task.start)
@@ -245,7 +249,8 @@ export function drawDependencyArrows(canvas: GanttCanvas, rows: GanttRow[]): voi
     if (!task.dependencies?.length) continue
     const toRow = indexMap.get(task.id)
     if (toRow === undefined) continue
-    const toY = HEADER_HEIGHT + toRow * ROW_HEIGHT + ROW_HEIGHT / 2
+    const { rowHeight } = canvas.cfg
+    const toY = HEADER_HEIGHT + toRow * rowHeight + rowHeight / 2
     const taskStart = parsePlainDate(task.start)
     if (!taskStart) continue
     const toX = dateToX(canvas.cfg, taskStart)
@@ -256,7 +261,7 @@ export function drawDependencyArrows(canvas: GanttCanvas, rows: GanttRow[]): voi
       const depDue = parsePlainDate(rows[fromRow].task.due)
       if (!depDue) continue
       const fromX = dateToX(canvas.cfg, depDue.add({ days: 1 }))
-      const fromY = HEADER_HEIGHT + fromRow * ROW_HEIGHT + ROW_HEIGHT / 2
+      const fromY = HEADER_HEIGHT + fromRow * rowHeight + rowHeight / 2
       const midX = (fromX + toX) / 2
       arrowGroup.appendChild(
         svgEl('path', {

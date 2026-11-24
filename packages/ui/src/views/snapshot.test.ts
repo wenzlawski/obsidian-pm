@@ -253,6 +253,21 @@ describe('snapshot kanban', () => {
   })
 })
 
+describe('snapshot compact', () => {
+  it('marks only the presentations the view made compact', () => {
+    const view = model({ fields: { table: { visible: ['title'], compact: true } } })
+    const table = document.body.createDiv()
+    renderSnapshotTable(table, view)
+    expect(table.querySelector('.pm-table-wrapper--compact')).not.toBeNull()
+    const board = document.body.createDiv()
+    renderSnapshotKanban(board, view)
+    expect(board.classList.contains('pm-kanban-view--compact')).toBe(false)
+    const compactBoard = document.body.createDiv()
+    renderSnapshotKanban(compactBoard, model({ fields: { kanban: { visible: ['tags'], compact: true } } }))
+    expect(compactBoard.classList.contains('pm-kanban-view--compact')).toBe(true)
+  })
+})
+
 describe('snapshot kanban fields', () => {
   it('deals subtasks their own cards and shows the fields the view chose', () => {
     const host = document.body.createDiv()
@@ -333,6 +348,16 @@ describe('snapshot gantt', () => {
     const buttons = Array.from(host.querySelectorAll('.pm-gantt-controls button')).map((b) => b.textContent)
     expect(buttons).toEqual(['Day', 'Week', 'Month', 'Quarter', 'Year'])
     expect(host.querySelector('.pm-gantt-bar-aside')).toBeNull()
+  })
+
+  it('draws shorter rows when the timeline is compact', () => {
+    const rowHeight = (view: ViewModel): number => {
+      const host = document.body.createDiv()
+      renderSnapshotGantt(host, view)
+      return parseInt((host.querySelector('.pm-gantt-label-row') as HTMLElement).style.height)
+    }
+    const compact = rowHeight(model({ fields: { gantt: { visible: ['title'], compact: true } } }))
+    expect(compact).toBeLessThan(rowHeight(model()))
   })
 
   it('leaves out the weekends when the view hides them', () => {

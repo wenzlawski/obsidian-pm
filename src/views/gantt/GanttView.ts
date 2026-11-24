@@ -4,6 +4,7 @@ import {
   type NonWorkingDays,
   type ViewFields,
   shownFields,
+  isCompact,
   type GanttGranularity,
   type TaskQuery,
   type FlatTask,
@@ -81,15 +82,20 @@ export class GanttView implements SubView, KeyboardSurface {
     if (!id || !this.scrollEl) return
     const index = this.rowIds.indexOf(id)
     if (index === -1) return
-    const top = index * ROW_HEIGHT
+    const rowHeight = this.rowHeight()
+    const top = index * rowHeight
     const viewport = this.scrollEl.clientHeight
-    if (top < this.scrollEl.scrollTop || top + ROW_HEIGHT > this.scrollEl.scrollTop + viewport) {
+    if (top < this.scrollEl.scrollTop || top + rowHeight > this.scrollEl.scrollTop + viewport) {
       this.scrollEl.scrollTop = Math.max(0, top - viewport / 2)
     }
   }
 
+  private rowHeight(): number {
+    return this.cfg?.rowHeight ?? ROW_HEIGHT
+  }
+
   pageSize(): number {
-    return Math.max(1, Math.floor((this.scrollEl?.clientHeight ?? 500) / ROW_HEIGHT))
+    return Math.max(1, Math.floor((this.scrollEl?.clientHeight ?? 500) / this.rowHeight()))
   }
 
   cancel(): boolean {
@@ -223,6 +229,7 @@ export class GanttView implements SubView, KeyboardSurface {
     this.cfg = buildTimelineConfig(activeTasks, this.granularity, {
       zoom: this.zoom,
       isHidden: nonWorkingDay(this.nonWorkingDays, this.plugin.settings.holidays),
+      compact: isCompact(this.fields, 'gantt'),
       minWidth: this.container.clientWidth - this.labelWidth
     })
 
@@ -292,7 +299,7 @@ export class GanttView implements SubView, KeyboardSurface {
     svgContainer.style.marginTop = `-${HEADER_HEIGHT}px`
 
     const totalRows = this.flatTasks.filter((f) => f.visible || f.depth === 0).length
-    const svgHeight = HEADER_HEIGHT + (totalRows + 1) * ROW_HEIGHT // +1 for add-task row
+    const svgHeight = HEADER_HEIGHT + (totalRows + 1) * this.cfg.rowHeight // +1 for add-task row
 
     this.svgEl = svgEl('svg', {
       width: this.cfg.totalWidth,
@@ -320,7 +327,7 @@ export class GanttView implements SubView, KeyboardSurface {
     this.cleanupFns.push(() => leftPanel.removeEventListener('wheel', onLeftWheel))
 
     const addRow = leftBody.createDiv('pm-gantt-label-row pm-gantt-add-row')
-    addRow.style.height = `${ROW_HEIGHT}px`
+    addRow.style.height = `${this.cfg.rowHeight}px`
     renderAddButton(addRow, t('task.add'), (e) => {
       openAddTask(this.plugin, this.scope, { event: e, onSave: () => this.onRefresh() })
     })
@@ -358,6 +365,7 @@ export class GanttView implements SubView, KeyboardSurface {
     this.rowIds = []
 
     const labelCtx = {
+      rowHeight: this.cfg.rowHeight,
       plugin: this.plugin,
       scope: this.scope,
       statuses: this.scope.config.statuses,

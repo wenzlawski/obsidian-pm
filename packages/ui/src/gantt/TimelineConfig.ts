@@ -12,6 +12,8 @@ export const ROW_HEIGHT = 44
 export const HEADER_HEIGHT = 56
 export const LABEL_WIDTH = 280
 export const BAR_PADDING = 8
+export const COMPACT_ROW_HEIGHT = 30
+export const COMPACT_BAR_PADDING = 6
 export const BAR_BORDER_RADIUS = 7
 
 export const DAY_WIDTH: Record<GanttGranularity, number> = {
@@ -32,6 +34,9 @@ export interface TimelineCfg {
   endDate: Temporal.PlainDate
   dayWidth: number
   granularity: GanttGranularity
+  /** Height in px of one task row, and the gap between a bar and the row's edge. */
+  rowHeight: number
+  barPadding: number
   totalDays: number
   totalWidth: number
   /** Per day from `startDate`: whether the axis leaves it out. */
@@ -47,6 +52,8 @@ export interface TimelineOptions {
   isHidden?: (date: Temporal.PlainDate) => boolean
   /** Width in pixels the shown days must at least fill; the range runs on past the last task until they do. */
   minWidth?: number
+  /** Draw rows tighter. */
+  compact?: boolean
 }
 
 /** The days `days` leaves out: Saturdays and Sundays, and the listed holidays. */
@@ -133,6 +140,8 @@ export function buildTimelineConfig(
     endDate,
     dayWidth,
     granularity,
+    rowHeight: options.compact ? COMPACT_ROW_HEIGHT : ROW_HEIGHT,
+    barPadding: options.compact ? COMPACT_BAR_PADDING : BAR_PADDING,
     totalDays,
     totalWidth: columns[totalDays] * dayWidth,
     hidden,

@@ -3,6 +3,7 @@ import {
   type Task,
   applyTaskFilterPromote,
   flattenTasks,
+  isCompact,
   shownFields,
   today,
   t
@@ -24,14 +25,7 @@ import {
 import type { GanttCanvas } from '../gantt/canvas'
 import { renderGridLines, renderTodayLine } from '../gantt/canvas'
 import { renderTimelineHeader } from '../gantt/header'
-import {
-  HEADER_HEIGHT,
-  LABEL_WIDTH,
-  ROW_HEIGHT,
-  buildTimelineConfig,
-  dateToX,
-  nonWorkingDay
-} from '../gantt/TimelineConfig'
+import { HEADER_HEIGHT, LABEL_WIDTH, buildTimelineConfig, dateToX, nonWorkingDay } from '../gantt/TimelineConfig'
 import {
   allTasks,
   configOf,
@@ -59,9 +53,9 @@ function visibleTasks(model: ViewModel): Task[] {
   return applyTaskFilterPromote(allTasks(model), queryOf(model), filterContextOf(model))
 }
 
-function renderLabel(container: HTMLElement, model: ViewModel, task: Task, depth: number): void {
+function renderLabel(container: HTMLElement, model: ViewModel, task: Task, depth: number, rowHeight: number): void {
   const el = container.createDiv('pm-gantt-label-row')
-  el.setCssStyles({ height: `${ROW_HEIGHT}px`, paddingLeft: `${depth * 18 + 8}px` })
+  el.setCssStyles({ height: `${rowHeight}px`, paddingLeft: `${depth * 18 + 8}px` })
   el.dataset.taskId = task.id
   el.createSpan({ cls: 'pm-gantt-label-spacer' })
   renderStatusDot(el, task.status, mergedConfig(model).statuses, 'pm-gantt-label-dot')
@@ -82,7 +76,8 @@ function renderBody(container: HTMLElement, model: ViewModel, granularity: Gantt
   const tasks = visibleTasks(model)
   const rows = flattenTasks(tasks).map((f) => ({ task: f.task, depth: f.depth }))
   const cfg = buildTimelineConfig(tasks, granularity, {
-    isHidden: nonWorkingDay(model.nonWorkingDays, model.settings.holidays)
+    isHidden: nonWorkingDay(model.nonWorkingDays, model.settings.holidays),
+    compact: isCompact(model.fields, 'gantt')
   })
   const config = mergedConfig(model)
   const statuses = config.statuses
@@ -105,7 +100,7 @@ function renderBody(container: HTMLElement, model: ViewModel, granularity: Gantt
 
   const svgContainer = rightPanel.createDiv('pm-gantt-svg-container')
   svgContainer.setCssStyles({ width: `${cfg.totalWidth}px`, marginTop: `-${HEADER_HEIGHT}px` })
-  const svgHeight = HEADER_HEIGHT + (rows.length + 1) * ROW_HEIGHT
+  const svgHeight = HEADER_HEIGHT + (rows.length + 1) * cfg.rowHeight
   const canvasSvg = svgEl('svg', { width: cfg.totalWidth, height: svgHeight, class: 'pm-gantt-svg' })
   svgContainer.appendChild(canvasSvg)
 
@@ -117,7 +112,7 @@ function renderBody(container: HTMLElement, model: ViewModel, granularity: Gantt
   const barsGroup = svgEl('g', { class: 'pm-gantt-bars' })
   canvasSvg.appendChild(barsGroup)
   rows.forEach(({ task, depth }, row) => {
-    renderLabel(leftBody, model, task, depth)
+    renderLabel(leftBody, model, task, depth, cfg.rowHeight)
     if (!task.start && !task.due) return
     const color = barColor(canvas, statuses, task)
     drawRowHover(barsGroup, canvas, row)

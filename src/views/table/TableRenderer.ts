@@ -13,6 +13,7 @@ import {
   type ViewFields,
   SORT_KEYS,
   columnWidth,
+  isCompact,
   tidyFields,
   viewFieldLabel,
   flattenTasks,
@@ -83,6 +84,7 @@ const TITLE_MIN_WIDTH = 180
 
 export function renderTable(ctx: TableContext): void {
   const wrapper = ctx.container.createDiv('pm-table-wrapper')
+  wrapper.toggleClass('pm-table-wrapper--compact', isCompact(ctx.fields, 'table'))
   ctx.state.wrapper = wrapper
   let scrollScheduled = false
   wrapper.addEventListener('scroll', () => {
@@ -318,6 +320,7 @@ function padGuides(trail: boolean[], depth: number): boolean[] {
 
 const ROW_OVERSCAN = 8
 export const ROW_HEIGHT_ESTIMATE = 36
+export const COMPACT_ROW_HEIGHT_ESTIMATE = 27
 
 /** The [start, end) slice of visibleRows to render at the current scroll position. */
 function computeWindow(state: TableState): { start: number; end: number } {

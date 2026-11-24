@@ -33,6 +33,13 @@ describe('buildTimelineConfig', () => {
     expect(cfg.endDate.since(cfg.startDate, { largestUnit: 'days' }).days).toBe(cfg.totalDays)
   })
 
+  it('draws shorter rows when compact', () => {
+    const roomy = buildTimelineConfig(tasks, 'week')
+    const compact = buildTimelineConfig(tasks, 'week', { compact: true })
+    expect(compact.rowHeight).toBeLessThan(roomy.rowHeight)
+    expect(compact.rowHeight - compact.barPadding * 2).toBeGreaterThan(0)
+  })
+
   it('gives a year column less width than a quarter column', () => {
     expect(buildTimelineConfig(tasks, 'year').dayWidth).toBeLessThan(buildTimelineConfig(tasks, 'quarter').dayWidth)
   })
