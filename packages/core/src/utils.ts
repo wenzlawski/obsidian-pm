@@ -111,6 +111,17 @@ export function stringifyCustomValue(val: unknown): string {
   return ''
 }
 
+/**
+ * The patch that sets one custom field on a task. Every other field is kept; an empty
+ * value (blank text, no choices) removes the key rather than storing it.
+ */
+export function customFieldPatch(task: Task, fieldId: string, value: unknown): Pick<Task, 'customFields'> {
+  const customFields = Object.fromEntries(Object.entries(task.customFields).filter(([id]) => id !== fieldId))
+  const empty = value === undefined || value === null || value === '' || (Array.isArray(value) && value.length === 0)
+  if (!empty) customFields[fieldId] = value
+  return { customFields }
+}
+
 export function sanitizeFileName(title: string): string {
   return title.replace(/[\\/:*?"<>|]/g, '-')
 }

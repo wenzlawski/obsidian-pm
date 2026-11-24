@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - The task name column in the table can now be resized
+- Select and multi-select custom fields can be changed straight from the table, like status and priority
 
 ### Fixed
 

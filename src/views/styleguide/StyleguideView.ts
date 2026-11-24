@@ -785,7 +785,7 @@ export class StyleguideView extends ItemView {
     const sec = this.section('Table row and cells', 'table')
     sec.createDiv({
       cls: 'pm-sg-caption',
-      text: 'TaskRow + one of each cell composite, with TitleCell tree connectors. ProjectCell only appears when a view covers several projects. CustomFieldCell takes plain text, or the links a value names.'
+      text: 'TaskRow + one of each cell composite, with TitleCell tree connectors. ProjectCell only appears when a view covers several projects. CustomFieldCell takes plain text, the links a value names, or a choice from a list that opens a picker when it has an onChange.'
     })
     const table = sec.createEl('table', { cls: 'pm-table' })
     const tbody = table.createEl('tbody')
@@ -843,6 +843,20 @@ export class StyleguideView extends ItemView {
         urgency: 'normal',
         time: { logged: 0, estimate: 0 },
         custom: { kind: 'checkbox', checked: true }
+      },
+      {
+        task: makeTask({ title: 'Plan the next release', status: 'todo', priority: 'medium' }),
+        props: { depth: 0, isDone: false, isSelected: false },
+        tree: { guides: [], isLastChild: true },
+        urgency: 'normal',
+        time: { logged: 0, estimate: 3 },
+        custom: {
+          kind: 'choice',
+          values: ['Acme'],
+          multiple: false,
+          options: ['Acme', 'Globex', 'Initech'].map((id) => ({ id, label: id })),
+          onChange: noop
+        }
       }
     ]
     for (const { task, props, tree, urgency, time, custom } of rows) {

@@ -16,7 +16,7 @@ import {
 } from '@dotpm/core'
 import { TaskRow } from '../composites/TaskRow'
 import { AssigneesCell } from '../composites/cells/AssigneesCell'
-import { CustomFieldCell, type CustomFieldValue } from '../composites/cells/CustomFieldCell'
+import { choiceFieldValue, CustomFieldCell, type CustomFieldValue } from '../composites/cells/CustomFieldCell'
 import { DueDateCell } from '../composites/cells/DueDateCell'
 import { ExpandCell } from '../composites/cells/ExpandCell'
 import { PriorityCell } from '../composites/cells/PriorityCell'
@@ -91,6 +91,8 @@ function padGuides(trail: boolean[], depth: number): boolean[] {
 
 function customFieldValue(model: ViewModel, cf: CustomFieldDef, val: unknown): CustomFieldValue {
   const values = (Array.isArray(val) ? val : [val]).map(stringifyCustomValue).filter(Boolean)
+  const choice = choiceFieldValue(cf, values)
+  if (choice) return choice
   if (cf.type === 'person') return { kind: 'people', people: values.map((raw) => personOf(model, raw)) }
   if (cf.type === 'checkbox') return { kind: 'checkbox', checked: Boolean(val) }
   if (cf.type === 'url') return { kind: 'url', url: values.join(', ') }

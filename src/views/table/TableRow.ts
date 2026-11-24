@@ -1,6 +1,7 @@
 import { Menu, type App } from 'obsidian'
 import {
   getStatusConfig,
+  customFieldPatch,
   dueUrgency,
   formatDateLong,
   isTerminalStatus,
@@ -14,6 +15,7 @@ import {
   TaskRow,
   ActionsCell,
   AssigneesCell,
+  choiceFieldValue,
   CustomFieldCell,
   type CustomFieldValue,
   DueDateCell,
@@ -152,9 +154,22 @@ export function renderTaskRow(tbody: HTMLElement, flat: TableTreeRow, ctx: Table
         new TimeCell(row, { logged: totalLoggedHours(task), estimate: task.timeEstimate ?? 0 })
         break
       default: {
-        const cf = customFields.find((field) => `cf:${field.id}` === column)
+        const shown = customFields.find((field) => `cf:${field.id}` === column)
+        // A view over several projects shows the union of their fields, but a value is
+        // only edited against the definition of the project it belongs to.
+        const own = shown && ctx.scope.configOf(task.id).customFields.find((field) => field.id === shown.id)
         const source = task.filePath ?? project.filePath
-        new CustomFieldCell(row, cf ? customFieldValue(ctx.plugin.app, cf, task.customFields[cf.id], source) : EMPTY)
+        const save =
+          own &&
+          safeAsync(async (value: unknown) => {
+            await ctx.plugin.store.updateTask(project, task.id, customFieldPatch(task, own.id, value))
+            await ctx.onRefresh()
+          })
+        const cf = own ?? shown
+        new CustomFieldCell(
+          row,
+          cf ? customFieldValue(ctx.plugin.app, cf, task.customFields[cf.id], source, save) : EMPTY
+        )
       }
     }
   }
@@ -202,9 +217,20 @@ const EMPTY: CustomFieldValue = { kind: 'text', text: '' }
 
 const WIKILINK = /^\[\[.+\]\]$/
 
-/** A person is shown as the avatars assignees get; any other value naming a note, as that note. */
-function customFieldValue(app: App, cf: CustomFieldDef, val: unknown, sourcePath: string): CustomFieldValue {
+/**
+ * A person is shown as the avatars assignees get; any other value naming a note, as that note.
+ * `save` is given where the field can be changed in the cell, and gets the value to store.
+ */
+function customFieldValue(
+  app: App,
+  cf: CustomFieldDef,
+  val: unknown,
+  sourcePath: string,
+  save?: (stored: unknown) => void
+): CustomFieldValue {
   const values = (Array.isArray(val) ? val : [val]).map(stringifyCustomValue).filter(Boolean)
+  const choice = choiceFieldValue(cf, values, save)
+  if (choice) return choice
   if (cf.type === 'person') return { kind: 'people', people: linkedRefs(app, values, sourcePath) }
   if (cf.type === 'checkbox') return { kind: 'checkbox', checked: Boolean(val) }
   if (cf.type === 'url') return { kind: 'url', url: values.join(', ') }

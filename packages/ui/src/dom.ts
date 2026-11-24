@@ -18,10 +18,11 @@ export function svgEl<K extends keyof SVGElementTagNameMap>(
 
 /**
  * Makes an element that isn't a button open something: click and Enter or Space both reach
- * `open`, and neither reaches the row or card behind it.
+ * `open`, and neither reaches the row or card behind it. `role` says what it opens to
+ * assistive technology: a `link` to a note, a `button` for anything that acts in place.
  */
-export function makeActivatable(el: HTMLElement, open: () => void): void {
-  el.setAttr('role', 'link')
+export function makeActivatable(el: HTMLElement, open: () => void, role: 'link' | 'button' = 'link'): void {
+  el.setAttr('role', role)
   el.setAttr('tabindex', '0')
   el.addEventListener('click', (e) => {
     e.preventDefault()

@@ -1,7 +1,16 @@
+import { t, type CustomFieldDef } from '@dotpm/core'
 import { setIcon } from '#platform'
 import { AvatarStack, type AvatarPerson } from '#primitives/AvatarStack'
 import { makeActivatable } from '#dom'
+import type { Popover } from '#primitives/Popover'
+import { openOptionPicker } from '../properties/OptionPicker'
+import type { SelectItem } from '../properties/optionList'
 
+/**
+ * Showing a value and changing it are one concept here: a kind that can be edited in the
+ * cell carries an `onChange`, and the cell becomes interactive exactly when one is given.
+ * A kind is made editable by adding its own `onChange` and the control that backs it.
+ */
 export type CustomFieldValue =
   | { kind: 'text'; text: string }
   | { kind: 'checkbox'; checked: boolean }
@@ -10,6 +19,36 @@ export type CustomFieldValue =
   | { kind: 'people'; people: AvatarPerson[] }
   /** Any other value naming a note, shown as the note's name. */
   | { kind: 'links'; links: AvatarPerson[] }
+  /** One or more values picked from a list: a select or multi-select field. */
+  | {
+      kind: 'choice'
+      values: string[]
+      options: SelectItem[]
+      multiple: boolean
+      /** Receives every value held after an edit; at most one for a single choice. */
+      onChange?: (values: string[]) => void
+    }
+
+/**
+ * The cell value for a select or multi-select field, null for any other type. `save` gets
+ * the value as the field stores it: a string for a select, a list for a multi-select. Without
+ * it the cell only shows the value.
+ */
+export function choiceFieldValue(
+  cf: CustomFieldDef,
+  values: string[],
+  save?: (stored: string | string[]) => void
+): CustomFieldValue | null {
+  if (cf.type !== 'select' && cf.type !== 'multiselect') return null
+  const multiple = cf.type === 'multiselect'
+  return {
+    kind: 'choice',
+    values,
+    multiple,
+    options: (cf.options ?? []).map((option) => ({ id: option, label: option })),
+    onChange: save && ((next) => save(multiple ? next : (next[0] ?? '')))
+  }
+}
 
 export class CustomFieldCell {
   el: HTMLTableCellElement
@@ -19,6 +58,9 @@ export class CustomFieldCell {
     switch (value.kind) {
       case 'text':
         this.empty(value.text)
+        return
+      case 'choice':
+        this.renderChoice(value)
         return
       case 'checkbox':
         if (value.checked) setIcon(this.el.createSpan({ cls: 'pm-glyph-icon' }), 'check')
@@ -43,8 +85,35 @@ export class CustomFieldCell {
     }
   }
 
-  private empty(text: string): void {
-    this.el.createSpan({ text: text || '—', cls: 'pm-cf-value' })
+  private empty(text: string): HTMLElement {
+    return this.el.createSpan({ text: text || '—', cls: 'pm-cf-value' })
+  }
+
+  private renderChoice(value: Extract<CustomFieldValue, { kind: 'choice' }>): void {
+    const el = this.empty(value.values.join(', '))
+    const onChange = value.onChange
+    if (!onChange) return
+    el.addClass('pm-cf-value--editable')
+    el.setAttr('aria-haspopup', 'true')
+    let picker: Popover | null = null
+    makeActivatable(
+      el,
+      () => {
+        if (picker?.isOpen) {
+          picker.close()
+          return
+        }
+        picker = openOptionPicker({
+          anchor: el,
+          options: value.options,
+          selected: value.values,
+          multiple: value.multiple,
+          noneLabel: t('common.none'),
+          onCommit: onChange
+        })
+      },
+      'button'
+    )
   }
 
   private renderLinks(links: AvatarPerson[]): void {
