@@ -14,11 +14,4 @@ export function renderTreeGuides(cell: HTMLElement, guides: boolean[] | null, is
   }
 }
 
-/**
- * The child's elbow claims a new column, and the column this row sits in keeps its line
- * only while more siblings follow it. A root row has no column of its own.
- */
-export function childTreeGuides(guides: boolean[], isLastChild: boolean): boolean[] {
-  if (!guides.length) return [false]
-  return [...guides.slice(0, -1), !isLastChild, false]
-}
+export { childTreeGuides } from '@dotpm/core'

@@ -26,6 +26,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- Fixed filtered subtasks keeping the indent and tree connectors of a parent the filter had hidden. A subtask whose parent is filtered out now stands at the top level of the table, with the parent's name beside its title
 - Fixed the first table row staying half hidden behind the header when moving up to it with the arrow keys
 - Fixed table columns shifting left instead of widening when dragging a column edge to the right
 - Fixed resized table columns snapping back narrower when the table is wider than the view

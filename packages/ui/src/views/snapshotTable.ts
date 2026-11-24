@@ -1,6 +1,7 @@
 import {
   type CustomFieldDef,
-  type FlatTask,
+  type TaskTreeRow,
+  arrangeTaskRows,
   applyTaskFilterFlat,
   dueUrgency,
   effectiveCustomValue,
@@ -9,7 +10,6 @@ import {
   getStatusConfig,
   inheritedShare,
   isCompact,
-  isQueryActive,
   isTerminalStatus,
   columnWidth,
   shownFields,
@@ -28,7 +28,6 @@ import { ProjectCell } from '../composites/cells/ProjectCell'
 import { StatusCell } from '../composites/cells/StatusCell'
 import { TimeCell } from '../composites/cells/TimeCell'
 import { TitleCell } from '../composites/cells/TitleCell'
-import { childTreeGuides } from '../composites/treeGuides'
 import {
   allTasks,
   configOf,
@@ -43,53 +42,15 @@ import {
 } from './model'
 import { compareTasks } from './tableSort'
 
-interface TreeRow extends FlatTask {
-  guides: boolean[]
-  isLastChild: boolean
-}
-
 const noop = (): void => {}
 const noSave = async (): Promise<void> => {}
 
-/**
- * Filtered, sorted, tree-ordered rows. A filter can promote a task whose parent was
- * filtered out to the top level; it keeps its depth for indentation.
- */
-export function tableRows(model: ViewModel): TreeRow[] {
+/** Filtered, sorted, tree-ordered rows. */
+export function tableRows(model: ViewModel): TaskTreeRow[] {
   const config = mergedConfig(model)
-  const query = queryOf(model)
-  const hasActiveFilter = isQueryActive(query)
-  const flat = applyTaskFilterFlat(flattenTasks(allTasks(model)), query, filterContextOf(model))
-  const filteredIds = new Set(flat.map((f) => f.task.id))
-
-  const childrenByParent = new Map<string | null, FlatTask[]>()
-  for (const f of flat) {
-    const bucket = f.parentId === null || (hasActiveFilter && !filteredIds.has(f.parentId)) ? null : f.parentId
-    const list = childrenByParent.get(bucket) ?? []
-    list.push(f)
-    childrenByParent.set(bucket, list)
-  }
-  for (const list of childrenByParent.values()) {
-    list.sort((a, b) => compareTasks(a.task, b.task, model.sort, config.statuses, config.priorities))
-  }
-
-  const rows: TreeRow[] = []
-  const add = (parentId: string | null, trail: boolean[]): void => {
-    const items = childrenByParent.get(parentId)
-    if (!items) return
-    items.forEach((item, i) => {
-      const isLastChild = i === items.length - 1
-      rows.push({ ...item, guides: padGuides(trail, item.depth), isLastChild })
-      add(item.task.id, childTreeGuides(trail, isLastChild))
-    })
-  }
-  add(null, [])
-  return rows
-}
-
-function padGuides(trail: boolean[], depth: number): boolean[] {
-  if (trail.length >= depth) return trail.slice(0, depth)
-  return [...Array.from<boolean>({ length: depth - trail.length }).fill(false), ...trail]
+  const all = flattenTasks(allTasks(model))
+  const shown = applyTaskFilterFlat(all, queryOf(model), filterContextOf(model))
+  return arrangeTaskRows(all, shown, (a, b) => compareTasks(a, b, model.sort, config.statuses, config.priorities))
 }
 
 function customFieldValue(model: ViewModel, cf: CustomFieldDef, val: unknown): CustomFieldValue {
@@ -156,6 +117,7 @@ export function renderSnapshotTable(container: HTMLElement, model: ViewModel): H
             task,
             treeGuides: model.settings.showSubtreeConnections ? flat.guides : null,
             isLastChild: flat.isLastChild,
+            detachedFrom: flat.detachedFrom,
             showTagColors: model.settings.showTagColors,
             onTitleClick: noop,
             onTitleSave: noSave,

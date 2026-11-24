@@ -10,6 +10,8 @@ export interface TitleCellProps {
   /** One entry per indent column: does an ancestor at that column still have rows below it. Null draws no connectors. */
   treeGuides: boolean[] | null
   isLastChild: boolean
+  /** The parent a filter left out: shown beside the title so the task still says what it belongs to. */
+  detachedFrom?: Task
   showTagColors: boolean
   onTitleClick: () => void
   onTitleSave: (newTitle: string) => Promise<void>
@@ -62,6 +64,10 @@ export class TitleCell {
         .setSize('sm')
         .setColor('var(--color-green)')
         .setTooltip(t('taskForm.typeSubtask'))
+    }
+    if (props.detachedFrom) {
+      const parent = inner.createSpan({ cls: 'pm-task-parent-hint', text: props.detachedFrom.title })
+      parent.setAttr('title', props.detachedFrom.title)
     }
     if (task.recurrence) {
       new Chip(inner)
