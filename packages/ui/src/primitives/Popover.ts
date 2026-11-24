@@ -41,6 +41,10 @@ function isFixedContainer(cs: CSSStyleDeclaration): boolean {
  * Escape, whose handler stops propagation so the host modal stays open. On phones it
  * renders as a bottom sheet instead.
  *
+ * A trigger shows one popover at a time: pressing it while its popover is open closes that
+ * popover instead of reaching the trigger's own handler, which would open another on top,
+ * and opening one on an anchor that already has one replaces it.
+ *
  * Inside a modal it mounts into the modal element rather than the body: Obsidian's focus
  * trap yanks focus back to the first field whenever it lands outside, which would make
  * the panel impossible to type in. `position: fixed` escapes the modal's overflow, unless a
@@ -123,6 +127,8 @@ export class Popover {
 
   open(): void {
     if (this.opened) return
+    const shown = Popover.byAnchor.get(this.anchor)
+    if (shown && shown !== this) shown.close()
     this.opened = true
     this.opener = this.doc.activeElement as HTMLElement | null
     Popover.byAnchor.set(this.anchor, this)
@@ -132,6 +138,7 @@ export class Popover {
     this.reposition()
     Popover.stack.push(this)
     this.doc.addEventListener('mousedown', this.onOutsideDown, true)
+    this.anchor.addEventListener('click', this.onAnchorClick, true)
     // Window capture runs ahead of Obsidian's keymap, so Escape can close this popover
     // without the host modal seeing it too.
     this.win.addEventListener('keydown', this.onKeyDown, true)
@@ -147,6 +154,7 @@ export class Popover {
     const hadFocus = this.el.contains(this.doc.activeElement)
     this.anchor.setAttribute('aria-expanded', 'false')
     this.doc.removeEventListener('mousedown', this.onOutsideDown, true)
+    this.anchor.removeEventListener('click', this.onAnchorClick, true)
     this.win.removeEventListener('keydown', this.onKeyDown, true)
     this.win.removeEventListener('scroll', this.reposition, true)
     const at = Popover.stack.indexOf(this)
@@ -220,6 +228,14 @@ export class Popover {
   private onOutsideDown = (e: MouseEvent): void => {
     const target = e.target as Node
     if (this.el.contains(target) || this.anchor.contains(target)) return
+    this.close()
+  }
+
+  /** Runs ahead of the trigger's own handler, so a second press closes rather than opens again. */
+  private onAnchorClick = (e: MouseEvent): void => {
+    if (this.el.contains(e.target as Node)) return
+    e.preventDefault()
+    e.stopImmediatePropagation()
     this.close()
   }
 

@@ -96,6 +96,51 @@ describe('Popover', () => {
     })
   })
 
+  describe('one popover per trigger', () => {
+    const trigger = (): { anchor: HTMLButtonElement; opened: () => number } => {
+      const anchor = document.createElement('button')
+      document.body.append(anchor)
+      let count = 0
+      anchor.addEventListener('click', () => {
+        count++
+        Popover.show({ anchor }, (el) => el.createDiv({ text: 'content' }))
+      })
+      return { anchor, opened: () => count }
+    }
+
+    it('closes on a second press without running the trigger again', () => {
+      const { anchor, opened } = trigger()
+      anchor.click()
+      expect(document.body.findAll('.pm-pop').length).toBe(1)
+      anchor.click()
+      expect(document.body.findAll('.pm-pop').length).toBe(0)
+      expect(opened()).toBe(1)
+      anchor.click()
+      expect(document.body.findAll('.pm-pop').length).toBe(1)
+      expect(opened()).toBe(2)
+    })
+
+    it('closes when the press lands on something inside the trigger', () => {
+      const { anchor } = trigger()
+      const icon = anchor.createSpan()
+      anchor.click()
+      icon.click()
+      expect(document.body.findAll('.pm-pop').length).toBe(0)
+    })
+
+    it('replaces a popover opened on a trigger that already has one', () => {
+      const anchor = document.createElement('button')
+      document.body.append(anchor)
+      const first = new Popover({ anchor })
+      first.open()
+      const second = new Popover({ anchor })
+      second.open()
+      expect(first.isOpen).toBe(false)
+      expect(second.isOpen).toBe(true)
+      expect(document.body.findAll('.pm-pop').length).toBe(1)
+    })
+  })
+
   it('closes the topmost popover inside a container', () => {
     const modal = document.createElement('div')
     modal.className = 'modal'
