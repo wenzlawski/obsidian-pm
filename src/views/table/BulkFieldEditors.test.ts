@@ -86,7 +86,7 @@ describe('bulk property picker', () => {
 describe('bulk field editors', () => {
   it('sets a select to the option picked', () => {
     const applied = openEditor('Client')
-    expect(labels()).toEqual(['Clear value', 'Acme', 'Globex'])
+    expect(labels()).toEqual(['Acme', 'Globex', 'Clear value'])
     click('Globex')
     expect(applied).toHaveBeenCalledExactlyOnceWith(FIELDS[0], { mode: 'set', value: 'Globex' })
   })
@@ -114,7 +114,7 @@ describe('bulk field editors', () => {
 
   it('sets a person', () => {
     const applied = openEditor('Owner')
-    expect(labels()).toEqual(['Clear value', 'Ada', 'Grace'])
+    expect(labels()).toEqual(['Ada', 'Grace', 'Clear value'])
     click('Grace')
     expect(applied).toHaveBeenCalledExactlyOnceWith(FIELDS[2], { mode: 'set', value: 'Grace' })
   })
@@ -128,7 +128,7 @@ describe('bulk field editors', () => {
 
   it('sets a date from the quick choices', () => {
     const applied = openEditor('Start')
-    expect(labels().slice(0, 1)).toEqual(['Clear value'])
+    expect(labels().slice(-1)).toEqual(['Clear value'])
     expect(labels()).toHaveLength(6)
     rows()[1].click()
     const [, change] = applied.mock.calls[0]

@@ -20,7 +20,6 @@
   "bulk.setPriority": "设置优先级",
   "bulk.setProgress": "设置进度",
   "bulk.setStatus": "设置状态",
-  "bulk.setTag": "设置标签",
   "bulk.tagPlaceholder": "标签",
   "bulk.today": "今天（{date}）",
   "bulk.tomorrow": "明天（{date}）",

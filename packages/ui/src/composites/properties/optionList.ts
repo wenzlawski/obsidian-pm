@@ -7,6 +7,8 @@ export interface SelectItem {
   label: string
   color?: string
   icon?: string
+  /** Faint text on the row, such as how many tasks hold the value. */
+  note?: string
 }
 
 export interface GlyphSpec {
@@ -31,6 +33,8 @@ export function renderGlyph(parent: HTMLElement, spec: GlyphSpec): void {
 export interface OptionRow extends GlyphSpec {
   label: string
   selected?: boolean
+  /** Some but not all of what the list stands for hold the value, shown as a dash in place of the check. */
+  mixed?: boolean
   accent?: boolean
   /** Draws initials from this name instead of a glyph. Used by the assignee picker. */
   avatar?: string
@@ -87,8 +91,12 @@ export function renderOptionRow(parent: HTMLElement, row: OptionRow): HTMLButton
   if (row.accent) item.addClass('pm-pop-item--accent')
   if (row.selected) item.addClass('pm-pop-item--selected')
   const check = createSpan({ cls: 'pm-pop-check' })
-  setIcon(check, 'check')
-  if (!row.selected) check.addClass('pm-pop-check--hidden')
+  setIcon(check, row.mixed ? 'minus' : 'check')
+  if (!row.selected && !row.mixed) check.addClass('pm-pop-check--hidden')
+  if (row.mixed) {
+    item.addClass('pm-pop-item--mixed')
+    item.setAttr('aria-pressed', 'mixed')
+  }
   if (row.check === 'start') item.appendChild(check)
   else if (row.avatar) new Avatar(item).setColor(row.color).setName(row.avatar).setSize('sm')
   else renderGlyph(item, row)

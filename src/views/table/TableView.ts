@@ -9,6 +9,7 @@ import {
   type SortRule,
   type ViewFields,
   applyCustomFieldChange,
+  applyTagChange,
   isQueryActive,
   shownFields
 } from '@dotpm/core'
@@ -279,12 +280,8 @@ export class TableView implements SubView, KeyboardSurface {
           await this.bulkAddToArray(project, ids, 'assignees', action.assignee)
         }
         break
-      case 'set-tag':
-        if (action.tag === '') {
-          await this.plugin.store.updateTasks(project, ids, { tags: [] })
-        } else {
-          await this.bulkAddToArray(project, ids, 'tags', action.tag)
-        }
+      case 'edit-tags':
+        await this.plugin.store.updateTasks(project, ids, (task) => applyTagChange(task, action.change))
         break
       case 'set-custom': {
         // A selection can span projects that don't all define the field; those are left alone.
@@ -325,12 +322,7 @@ export class TableView implements SubView, KeyboardSurface {
     }
   }
 
-  private async bulkAddToArray(
-    project: Project,
-    ids: string[],
-    field: 'assignees' | 'tags',
-    value: string
-  ): Promise<void> {
+  private async bulkAddToArray(project: Project, ids: string[], field: 'assignees', value: string): Promise<void> {
     await this.plugin.store.updateTasks(project, ids, (task) =>
       task[field].includes(value) ? null : { [field]: [...task[field], value] }
     )

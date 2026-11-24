@@ -26,7 +26,6 @@
   "bulk.setPriority": "Définir la priorité",
   "bulk.setProgress": "Définir l'avancement",
   "bulk.setStatus": "Définir le statut",
-  "bulk.setTag": "Définir le mot-clé",
   "bulk.tagPlaceholder": "Mot-clé",
   "bulk.today": "Aujourd'hui ({date})",
   "bulk.tomorrow": "Demain ({date})",

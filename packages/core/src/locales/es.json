@@ -26,7 +26,6 @@
   "bulk.setPriority": "Cambiar prioridad",
   "bulk.setProgress": "Cambiar progreso",
   "bulk.setStatus": "Cambiar estado",
-  "bulk.setTag": "Añadir etiqueta",
   "bulk.tagPlaceholder": "Etiqueta",
   "bulk.today": "Hoy ({date})",
   "bulk.tomorrow": "Mañana ({date})",

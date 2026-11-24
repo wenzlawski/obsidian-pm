@@ -20,7 +20,6 @@
   "bulk.setPriority": "優先度を設定",
   "bulk.setProgress": "進捗を設定",
   "bulk.setStatus": "ステータスを設定",
-  "bulk.setTag": "タグを追加",
   "bulk.tagPlaceholder": "タグ",
   "bulk.today": "今日（{date}）",
   "bulk.tomorrow": "明日（{date}）",

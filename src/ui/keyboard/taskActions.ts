@@ -2,7 +2,9 @@ import { Notice } from 'obsidian'
 import type PMPlugin from '#main'
 import {
   type Project,
+  type TagChange,
   type Task,
+  applyTagChange,
   collectAllAssignees,
   collectAllTags,
   dedupePeople,
@@ -13,6 +15,7 @@ import {
   isTerminalStatus,
   parsePlainDate,
   t,
+  tagUsage,
   tn,
   today
 } from '@dotpm/core'
@@ -27,6 +30,7 @@ import {
   promptText
 } from '#ui/ModalFactory'
 import { openChoice, type Choice } from './choice'
+import { tagChoices } from './tagChoices'
 import type { ActionHandlers } from './keymap'
 import type { KeyboardSurface } from './types'
 
@@ -288,27 +292,33 @@ function askAssignee(ctx: TaskActionContext, entries: TaskEntry[]): void {
   })
 }
 
+/** Tags are changed one at a time: add one to the tasks that lack it, or take it off the ones that hold it. */
 function askTag(ctx: TaskActionContext, entries: TaskEntry[]): void {
-  const tags = collectAllTags(ctx.scope.tasks())
-  const choices: Choice<string>[] = tags.map((tag) => ({ label: `#${tag}`, value: tag }))
-  choices.push({ label: t('bulk.newTag'), value: '__new' })
-  choices.push({ label: t('bulk.clearTags'), value: '' })
-  const apply = (tag: string): void => {
-    ctx.enqueue(() =>
-      patchTasks(ctx, entries, (task) => ({
-        tags: tag ? [...new Set([...task.tags, tag])] : []
-      }))
-    )
+  const tasks = entries.map((entry) => entry.task)
+  const known = collectAllTags(ctx.scope.tasks())
+  const held = tagUsage(tasks, known)
+    .filter((entry) => entry.count > 0)
+    .map((entry) => entry.tag)
+  const apply = (change: TagChange): void => {
+    ctx.enqueue(() => patchTasks(ctx, entries, (task) => applyTagChange(task, change)))
   }
-  openChoice(ctx.plugin.app, t('keyboard.tags'), choices, (tag) => {
-    if (tag !== '__new') {
-      apply(tag)
-      return
+  openChoice(ctx.plugin.app, t('keyboard.tags'), tagChoices(tasks, known), (choice) => {
+    switch (choice.op) {
+      case 'add':
+        apply({ add: [choice.tag], remove: [] })
+        return
+      case 'remove':
+        apply({ add: [], remove: [choice.tag] })
+        return
+      case 'clear':
+        apply({ add: [], remove: held })
+        return
+      case 'new':
+        void safeAsync(async () => {
+          const typed = await promptText(ctx.plugin.app, t('bulk.enterTag'), t('bulk.tagPlaceholder'))
+          if (typed?.trim()) apply({ add: [typed.trim().replace(/^#/, '')], remove: [] })
+        })()
     }
-    void safeAsync(async () => {
-      const typed = await promptText(ctx.plugin.app, t('bulk.enterTag'), t('bulk.tagPlaceholder'))
-      if (typed?.trim()) apply(typed.trim().replace(/^#/, ''))
-    })()
   })
 }
 

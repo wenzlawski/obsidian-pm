@@ -26,7 +26,6 @@
   "bulk.setPriority": "Setează prioritatea",
   "bulk.setProgress": "Setează progresul",
   "bulk.setStatus": "Setează starea",
-  "bulk.setTag": "Setează eticheta",
   "bulk.tagPlaceholder": "Etichetă",
   "bulk.today": "Astăzi ({date})",
   "bulk.tomorrow": "Mâine ({date})",

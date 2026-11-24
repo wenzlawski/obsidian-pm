@@ -32,7 +32,7 @@ shortcuts sheet leaves it out.
 | `p` / `Shift+P` | Next / previous priority |
 | `a` | Assign people |
 | `d` / `Shift+D` | Set the due date / the start date |
-| `#` | Add or clear tags |
+| `#` | Add or remove a tag, or clear them |
 | `m` | Move to a project, set a parent, or remove it |
 | `Mod+D` | Duplicate |
 | `u` | Archive or unarchive |

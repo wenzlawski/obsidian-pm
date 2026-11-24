@@ -20,7 +20,6 @@
   "bulk.setPriority": "우선순위 지정",
   "bulk.setProgress": "진행률 지정",
   "bulk.setStatus": "상태 지정",
-  "bulk.setTag": "태그 지정",
   "bulk.tagPlaceholder": "태그",
   "bulk.today": "오늘 ({date})",
   "bulk.tomorrow": "내일 ({date})",

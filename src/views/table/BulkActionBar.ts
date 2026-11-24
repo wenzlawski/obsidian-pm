@@ -1,20 +1,20 @@
 import { ButtonComponent, ExtraButtonComponent, Menu } from 'obsidian'
 import {
   type CustomFieldChange,
+  type TagChange,
   type Task,
   type TaskStatus,
   type TaskPriority,
   flattenTasks,
   collectAllAssignees,
-  collectAllTags,
   displayName,
   today,
   t
 } from '@dotpm/core'
 import { openOptionPicker, priorityPickerItems, statusPickerItems } from '@dotpm/ui'
-import { promptText } from '#ui/ModalFactory'
 import { peopleSource } from '#ui/PersonPicker'
 import { TaskPickerModal } from '#modals/PickerModals'
+import { openBulkTagPicker } from './BulkTagPicker'
 import { bulkEditableFields, openBulkPropertyPicker, pickDate } from './BulkFieldEditors'
 import type { TableContext } from './TableRenderer'
 import { updateSelectAllCheckbox } from './TableRow'
@@ -23,7 +23,7 @@ export type BulkAction =
   | { type: 'set-status'; status: TaskStatus }
   | { type: 'set-priority'; priority: TaskPriority }
   | { type: 'set-assignee'; assignee: string }
-  | { type: 'set-tag'; tag: string }
+  | { type: 'edit-tags'; change: TagChange }
   | { type: 'set-custom'; fieldId: string; change: CustomFieldChange }
   | { type: 'set-due-date'; due: string }
   | { type: 'set-progress'; progress: number }
@@ -102,23 +102,10 @@ function updateBarContent(bar: HTMLElement, ctx: TableContext, onAction: (a: Bul
     menu.showAtMouseEvent(e)
   })
 
-  new ButtonComponent(left).setButtonText(t('bulk.setTag')).onClick((e) => {
-    const menu = new Menu()
-    const allTags = collectAllTags(ctx.scope.tasks())
-    for (const tag of allTags) {
-      menu.addItem((item) => item.setTitle(tag).onClick(() => onAction({ type: 'set-tag', tag })))
-    }
-    menu.addSeparator()
-    menu.addItem((item) =>
-      item.setTitle(t('bulk.newTag')).onClick(async () => {
-        const tag = await promptText(ctx.plugin.app, t('bulk.enterTag'), t('bulk.tagPlaceholder'))
-        if (tag) onAction({ type: 'set-tag', tag })
-      })
-    )
-    menu.addSeparator()
-    menu.addItem((item) => item.setTitle(t('bulk.clearTags')).onClick(() => onAction({ type: 'set-tag', tag: '' })))
-    menu.showAtMouseEvent(e)
-  })
+  const tagButton = new ButtonComponent(left).setButtonText(t('bulk.editTags'))
+  tagButton.onClick(() =>
+    openBulkTagPicker(ctx, tagButton.buttonEl, (change) => onAction({ type: 'edit-tags', change }))
+  )
 
   new ButtonComponent(left).setButtonText(t('taskForm.setDueDate')).onClick((e) => {
     const menu = new Menu()

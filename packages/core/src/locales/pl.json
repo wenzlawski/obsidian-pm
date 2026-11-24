@@ -29,7 +29,6 @@
   "bulk.setPriority": "Ustaw priorytet",
   "bulk.setProgress": "Ustaw postęp",
   "bulk.setStatus": "Ustaw status",
-  "bulk.setTag": "Ustaw tag",
   "bulk.tagPlaceholder": "Tag",
   "bulk.today": "Dzisiaj ({date})",
   "bulk.tomorrow": "Jutro ({date})",

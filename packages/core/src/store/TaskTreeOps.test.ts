@@ -2,6 +2,9 @@ import { describe, expect, it } from 'vitest'
 import { makeTask, type Task } from '../types'
 import {
   addTaskToTree,
+  applyTagChange,
+  diffTagChange,
+  tagUsage,
   collectAllAssignees,
   collectAllTags,
   deleteTaskFromTree,
@@ -216,5 +219,87 @@ describe('totalLoggedHours', () => {
       ]
     })
     expect(totalLoggedHours(t)).toBe(5.5)
+  })
+})
+
+describe('applyTagChange', () => {
+  const tagged = task({ id: 'a', tags: ['art', 'wip', 'UI'] })
+
+  it('adds tags after the ones a task has', () => {
+    expect(applyTagChange(tagged, { add: ['new'], remove: [] })?.tags).toEqual(['art', 'wip', 'UI', 'new'])
+  })
+
+  it('takes a tag off without touching the rest', () => {
+    expect(applyTagChange(tagged, { add: [], remove: ['wip'] })?.tags).toEqual(['art', 'UI'])
+  })
+
+  it('matches tags the way Obsidian does, ignoring case and a leading #', () => {
+    expect(applyTagChange(tagged, { add: [], remove: ['#Art', 'ui'] })?.tags).toEqual(['wip'])
+    expect(applyTagChange(tagged, { add: ['#ART', ' Wip '], remove: [] })).toBeNull()
+  })
+
+  it('writes an added tag without its #', () => {
+    expect(applyTagChange(tagged, { add: ['#fresh'], remove: [] })?.tags).toEqual(['art', 'wip', 'UI', 'fresh'])
+  })
+
+  it('does both at once, and ignores blank tags', () => {
+    expect(applyTagChange(tagged, { add: ['x', '', '#'], remove: ['art'] })?.tags).toEqual(['wip', 'UI', 'x'])
+  })
+
+  it('leaves a task alone when it already ends up as asked', () => {
+    expect(applyTagChange(tagged, { add: ['art'], remove: [] })).toBeNull()
+    expect(applyTagChange(tagged, { add: [], remove: ['missing'] })).toBeNull()
+    expect(applyTagChange(tagged, { add: [], remove: [] })).toBeNull()
+  })
+
+  it('does not touch the task it reads', () => {
+    applyTagChange(tagged, { add: ['x'], remove: ['art'] })
+    expect(tagged.tags).toEqual(['art', 'wip', 'UI'])
+  })
+})
+
+describe('tagUsage', () => {
+  const tasks = [task({ id: 'a', tags: ['art', 'wip'] }), task({ id: 'b', tags: ['Art'] }), task({ id: 'c', tags: [] })]
+
+  it('counts the tasks holding each tag, a spelling variant included', () => {
+    expect(tagUsage(tasks, ['art', 'wip', 'idle'])).toEqual([
+      { tag: 'art', count: 2 },
+      { tag: 'wip', count: 1 },
+      { tag: 'idle', count: 0 }
+    ])
+  })
+
+  it('adds tags held by a task that were not known, sorted, after the known ones', () => {
+    const extra = [task({ id: 'a', tags: ['zed', 'amy'] })]
+    expect(tagUsage(extra, ['mid']).map((u) => u.tag)).toEqual(['mid', 'amy', 'zed'])
+  })
+
+  it('counts a task once however often it holds a tag', () => {
+    expect(tagUsage([task({ id: 'a', tags: ['x', 'X'] })])).toEqual([{ tag: 'x', count: 1 }])
+  })
+
+  it('skips blank tags', () => {
+    expect(tagUsage([task({ id: 'a', tags: ['', '#'] })], [''])).toEqual([])
+  })
+})
+
+describe('diffTagChange', () => {
+  it('adds what was turned on and removes what was turned off', () => {
+    const before = { on: ['a', 'b'], mixed: ['c', 'd'] }
+    const after = { on: ['a', 'd', 'new'], mixed: ['c'] }
+    expect(diffTagChange(before, after)).toEqual({ add: ['d', 'new'], remove: ['b'] })
+  })
+
+  it('removes a mixed tag turned off, and leaves one still mixed', () => {
+    expect(diffTagChange({ on: [], mixed: ['m', 'n'] }, { on: [], mixed: ['n'] })).toEqual({ add: [], remove: ['m'] })
+  })
+
+  it('asks for nothing when nothing changed', () => {
+    const same = { on: ['a'], mixed: ['b'] }
+    expect(diffTagChange(same, same)).toEqual({ add: [], remove: [] })
+  })
+
+  it('compares tags as Obsidian does', () => {
+    expect(diffTagChange({ on: ['Art'], mixed: [] }, { on: ['art'], mixed: [] })).toEqual({ add: [], remove: [] })
   })
 })

@@ -29,7 +29,6 @@
   "bulk.setPriority": "Изменить приоритет",
   "bulk.setProgress": "Изменить прогресс",
   "bulk.setStatus": "Изменить статус",
-  "bulk.setTag": "Добавить тег",
   "bulk.tagPlaceholder": "Тег",
   "bulk.today": "Сегодня ({date})",
   "bulk.tomorrow": "Завтра ({date})",

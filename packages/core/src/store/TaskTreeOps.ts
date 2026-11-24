@@ -1,6 +1,7 @@
 import type { Task } from '../types'
 import { makeId } from '../types'
 import { dedupePeople } from '../utils'
+import { tagKey } from './Inheritance'
 
 export interface FlatTask {
   task: Task
@@ -159,6 +160,85 @@ export function collectAllTags(tasks: Task[]): string[] {
   }
   walk(tasks)
   return [...set].filter(Boolean).sort()
+}
+
+/** Tags to put on tasks and tags to take off them, matched the way Obsidian matches tags. */
+export interface TagChange {
+  add: string[]
+  remove: string[]
+}
+
+/**
+ * The patch a tag change makes to one task, or null where it already ends up as asked.
+ * `#Art` and `art` are one tag, so removing either removes both, and adding a tag a task
+ * holds under another spelling leaves it as it is.
+ */
+export function applyTagChange(task: Task, change: TagChange): Pick<Task, 'tags'> | null {
+  const removed = new Set(change.remove.map(tagKey))
+  const tags = task.tags.filter((tag) => !removed.has(tagKey(tag)))
+  const held = new Set(tags.map(tagKey))
+  for (const raw of change.add) {
+    const tag = raw.trim().replace(/^#/, '')
+    if (!tag || held.has(tagKey(tag))) continue
+    held.add(tagKey(tag))
+    tags.push(tag)
+  }
+  const unchanged = tags.length === task.tags.length && tags.every((tag, i) => tag === task.tags[i])
+  return unchanged ? null : { tags }
+}
+
+export interface TagUsage {
+  tag: string
+  /** How many of the tasks hold the tag. */
+  count: number
+}
+
+/**
+ * How many of `tasks` hold each tag: the `known` ones in the order given, then any a task holds
+ * that is not among them. A tag spelled two ways counts once, under its first spelling.
+ */
+export function tagUsage(tasks: Task[], known: string[] = []): TagUsage[] {
+  const usage = new Map<string, TagUsage>()
+  const entry = (tag: string): TagUsage => {
+    const key = tagKey(tag)
+    let found = usage.get(key)
+    if (!found) {
+      found = { tag, count: 0 }
+      usage.set(key, found)
+    }
+    return found
+  }
+  for (const tag of known) if (tagKey(tag)) entry(tag)
+  const extras = new Map<string, string>()
+  for (const tag of tasks.flatMap((task) => task.tags)) {
+    const key = tagKey(tag)
+    if (key && !usage.has(key) && !extras.has(key)) extras.set(key, tag)
+  }
+  for (const key of [...extras.keys()].sort()) entry(extras.get(key) ?? key)
+  for (const task of tasks) {
+    for (const key of new Set(task.tags.map(tagKey))) {
+      const found = usage.get(key)
+      if (found) found.count++
+    }
+  }
+  return [...usage.values()]
+}
+
+/** Where each tag stands: held by every task, or by some of them. */
+export interface TagStanding {
+  on: string[]
+  mixed: string[]
+}
+
+/** The change that takes tags from one standing to another; a tag left mixed is left alone. */
+export function diffTagChange(before: TagStanding, after: TagStanding): TagChange {
+  const keys = (tags: string[]): Set<string> => new Set(tags.map(tagKey))
+  const wasOn = keys(before.on)
+  const isHeld = keys([...after.on, ...after.mixed])
+  return {
+    add: after.on.filter((tag) => !wasOn.has(tagKey(tag))),
+    remove: [...before.on, ...before.mixed].filter((tag) => !isHeld.has(tagKey(tag)))
+  }
 }
 
 export function totalLoggedHours(task: Task): number {

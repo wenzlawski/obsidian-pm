@@ -23,7 +23,6 @@
   "bulk.setPriority": "অগ্রাধিকার নির্ধারণ করুন",
   "bulk.setProgress": "অগ্রগতি নির্ধারণ করুন",
   "bulk.setStatus": "স্ট্যাটাস নির্ধারণ করুন",
-  "bulk.setTag": "ট্যাগ নির্ধারণ করুন",
   "bulk.tagPlaceholder": "ট্যাগ",
   "bulk.today": "আজ ({date})",
   "bulk.tomorrow": "আগামীকাল ({date})",

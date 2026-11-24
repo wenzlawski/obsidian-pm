@@ -23,7 +23,6 @@
   "bulk.setPriority": "Ange prioritet",
   "bulk.setProgress": "Ange förlopp",
   "bulk.setStatus": "Ange status",
-  "bulk.setTag": "Ange tagg",
   "bulk.tagPlaceholder": "Tagg",
   "bulk.today": "Idag ({date})",
   "bulk.tomorrow": "Imorgon ({date})",
