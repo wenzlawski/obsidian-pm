@@ -343,7 +343,7 @@ export class StyleguideView extends ItemView {
 
   private renderBadges(): void {
     const sec = this.section('Status and priority', 'badges')
-    const statusRow = this.row(sec, 'renderStatusBadge (opens a picker menu)')
+    const statusRow = this.row(sec, 'renderStatusBadge (opens an option picker)')
     for (const status of DEFAULT_STATUSES) {
       renderStatusBadge(statusRow, makeTask({ status: status.id }), DEFAULT_STATUSES, noop)
     }

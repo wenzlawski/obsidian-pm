@@ -7,11 +7,10 @@ import {
   collectAllAssignees,
   collectAllTags,
   displayName,
-  priorityIcon,
   today,
   t
 } from '@dotpm/core'
-import { addPaletteMenuItem } from '@dotpm/ui'
+import { openOptionPicker, priorityPickerItems, statusPickerItems } from '@dotpm/ui'
 import { promptText } from '#ui/ModalFactory'
 import { peopleSource } from '#ui/PersonPicker'
 import { TaskPickerModal } from '#modals/PickerModals'
@@ -62,25 +61,25 @@ function updateBarContent(bar: HTMLElement, ctx: TableContext, onAction: (a: Bul
   const left = bar.createDiv('pm-bulk-bar-left')
   left.createSpan({ text: t('common.selectedCount', { count }), cls: 'pm-bulk-bar-count' })
 
-  new ButtonComponent(left).setButtonText(t('bulk.setStatus')).onClick((e) => {
-    const menu = new Menu()
-    for (const s of ctx.statuses) {
-      addPaletteMenuItem(menu, s, { onClick: () => onAction({ type: 'set-status', status: s.id }) })
-    }
-    menu.showAtMouseEvent(e)
-  })
+  const statusButton = new ButtonComponent(left).setButtonText(t('bulk.setStatus'))
+  statusButton.onClick(() =>
+    openOptionPicker({
+      anchor: statusButton.buttonEl,
+      options: statusPickerItems(ctx.statuses),
+      selected: [],
+      onCommit: ([status]) => onAction({ type: 'set-status', status })
+    })
+  )
 
-  new ButtonComponent(left).setButtonText(t('bulk.setPriority')).onClick((e) => {
-    const menu = new Menu()
-    for (const p of ctx.priorities) {
-      addPaletteMenuItem(
-        menu,
-        { ...p, namedIcon: priorityIcon(ctx.priorities, p.id, ctx.priorityIcons) },
-        { onClick: () => onAction({ type: 'set-priority', priority: p.id }) }
-      )
-    }
-    menu.showAtMouseEvent(e)
-  })
+  const priorityButton = new ButtonComponent(left).setButtonText(t('bulk.setPriority'))
+  priorityButton.onClick(() =>
+    openOptionPicker({
+      anchor: priorityButton.buttonEl,
+      options: priorityPickerItems(ctx.priorities, ctx.priorityIcons),
+      selected: [],
+      onCommit: ([priority]) => onAction({ type: 'set-priority', priority })
+    })
+  )
 
   new ButtonComponent(left).setButtonText(t('bulk.setAssignee')).onClick((e) => {
     const menu = new Menu()

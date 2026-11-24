@@ -1,8 +1,8 @@
 // @vitest-environment happy-dom
 import { describe, expect, it, vi } from 'vitest'
-import { DEFAULT_STATUSES, makeTask } from '@dotpm/core'
+import { DEFAULT_PRIORITIES, DEFAULT_STATUSES, makeTask } from '@dotpm/core'
 import { KanbanCard } from './KanbanCard'
-import { renderStatusBadge } from '../StatusBadge'
+import { renderPriorityBadge, renderStatusBadge } from '../StatusBadge'
 
 function noop(): void {}
 
@@ -56,22 +56,50 @@ describe('KanbanCard outside Obsidian', () => {
 })
 
 describe('status badge outside Obsidian', () => {
-  it('opens a menu of statuses and reports the pick', () => {
+  it('opens a picker of statuses and reports the pick', () => {
     const host = document.body.createDiv()
     const onChange = vi.fn<(status: string) => void>()
     const task = makeTask({ title: 'Pick me', status: DEFAULT_STATUSES[0].id })
     const badge = renderStatusBadge(host, task, DEFAULT_STATUSES, onChange)
     expect(badge.textContent).toContain(DEFAULT_STATUSES[0].label)
 
-    badge.dispatchEvent(new MouseEvent('click', { bubbles: true, clientX: 10, clientY: 20 }))
-    const items = document.body.findAll('.menu .menu-item')
-    expect(items.map((item) => item.find('.menu-item-title')?.textContent)).toEqual(
+    badge.click()
+    const items = document.body.findAll('.pm-pop .pm-pop-item')
+    expect(items.map((item) => item.find('.pm-pop-item-label')?.textContent)).toEqual(
       DEFAULT_STATUSES.map((status) => status.label)
     )
-    expect(items[0].hasClass('mod-checked')).toBe(true)
+    expect(items[0].find('.pm-pop-check--hidden')).toBeNull()
+    expect(items[1].find('.pm-pop-check--hidden')).not.toBeNull()
 
     items[1].click()
     expect(onChange).toHaveBeenCalledWith(DEFAULT_STATUSES[1].id)
-    expect(document.body.find('.menu')).toBeNull()
+    expect(document.body.find('.pm-pop')).toBeNull()
+  })
+
+  it('closes the picker when the badge is clicked again, and keeps the status on the same pick', () => {
+    const host = document.body.createDiv()
+    const onChange = vi.fn<(status: string) => void>()
+    const badge = renderStatusBadge(host, makeTask({ status: DEFAULT_STATUSES[0].id }), DEFAULT_STATUSES, onChange)
+    badge.click()
+    badge.click()
+    expect(document.body.find('.pm-pop')).toBeNull()
+    badge.click()
+    document.body.findAll('.pm-pop .pm-pop-item')[0].click()
+    expect(onChange).not.toHaveBeenCalled()
+  })
+
+  it('picks a priority the same way, with the rows in the configured order', () => {
+    const host = document.body.createDiv()
+    const onChange = vi.fn<(priority: string) => void>()
+    const task = makeTask({ priority: DEFAULT_PRIORITIES[0].id })
+    const badge = renderPriorityBadge(host, task, DEFAULT_PRIORITIES, 'chevrons', onChange)
+
+    badge.click()
+    const items = document.body.findAll('.pm-pop .pm-pop-item')
+    expect(items.map((item) => item.find('.pm-pop-item-label')?.textContent)).toEqual(
+      DEFAULT_PRIORITIES.map((priority) => priority.label)
+    )
+    items[2].click()
+    expect(onChange).toHaveBeenCalledExactlyOnceWith(DEFAULT_PRIORITIES[2].id)
   })
 })
