@@ -43,6 +43,10 @@ const click = (label: string): void => {
 const escape = (): void => {
   document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }))
 }
+/** Closes every popover the way a reader does, so none is left listening for keys. */
+const closePopovers = (): void => {
+  for (let i = 0; i < 20 && document.querySelector('.pm-pop'); i++) escape()
+}
 const flush = (): Promise<void> => new Promise((resolve) => setTimeout(resolve, 0))
 
 /** Picks a field in the first picker and returns what the editor then reports. */
@@ -55,6 +59,7 @@ function openEditor(name: string, ctx = makeCtx()) {
 }
 
 afterEach(() => {
+  closePopovers()
   document.body.empty()
   promptText.mockReset()
 })
@@ -62,6 +67,7 @@ afterEach(() => {
 describe('bulk property picker', () => {
   it('lists the fields and opens an editor for every one of them', () => {
     for (const field of FIELDS) {
+      closePopovers()
       document.body.empty()
       const anchor = document.body.createEl('button')
       openBulkPropertyPicker(makeCtx(), anchor, vi.fn<() => void>())
@@ -153,6 +159,7 @@ describe('bulk field editors', () => {
     await flush()
     expect(note).toHaveBeenCalledExactlyOnceWith(FIELDS[6], { mode: 'set', value: 'hello' })
 
+    closePopovers()
     document.body.empty()
     promptText.mockResolvedValue(null)
     const link = openEditor('Link')
