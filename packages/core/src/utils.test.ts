@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
+  applyCustomFieldChange,
   customFieldPatch,
   dedupePeople,
   displayName,
@@ -251,6 +252,53 @@ describe('customFieldPatch', () => {
 
   it('leaves the task untouched', () => {
     customFieldPatch(task, 'client', '')
+    expect(task.customFields.client).toBe('Acme')
+  })
+})
+
+describe('applyCustomFieldChange', () => {
+  const task = makeTask({ customFields: { client: 'Acme', labels: ['a', 'b'], size: 3 } })
+
+  it('sets the value on a task, keeping its other fields', () => {
+    expect(applyCustomFieldChange(task, 'client', { mode: 'set', value: 'Globex' })?.customFields).toEqual({
+      client: 'Globex',
+      labels: ['a', 'b'],
+      size: 3
+    })
+    expect(applyCustomFieldChange(task, 'done', { mode: 'set', value: false })?.customFields).toMatchObject({
+      done: false
+    })
+  })
+
+  it('adds values after the ones a task has, skipping those it already holds', () => {
+    expect(applyCustomFieldChange(task, 'labels', { mode: 'add', values: ['b', 'c'] })?.customFields.labels).toEqual([
+      'a',
+      'b',
+      'c'
+    ])
+    expect(applyCustomFieldChange(task, 'fresh', { mode: 'add', values: ['x'] })?.customFields.fresh).toEqual(['x'])
+  })
+
+  it('adds to a value written as a single string', () => {
+    expect(applyCustomFieldChange(task, 'client', { mode: 'add', values: ['Globex'] })?.customFields.client).toEqual([
+      'Acme',
+      'Globex'
+    ])
+  })
+
+  it('clears a field by dropping its key', () => {
+    expect(applyCustomFieldChange(task, 'labels', { mode: 'clear' })?.customFields).toEqual({ client: 'Acme', size: 3 })
+  })
+
+  it('leaves a task alone when it already ends up as asked', () => {
+    expect(applyCustomFieldChange(task, 'client', { mode: 'set', value: 'Acme' })).toBeNull()
+    expect(applyCustomFieldChange(task, 'labels', { mode: 'add', values: ['a'] })).toBeNull()
+    expect(applyCustomFieldChange(task, 'missing', { mode: 'clear' })).toBeNull()
+    expect(applyCustomFieldChange(task, 'size', { mode: 'set', value: 3 })).toBeNull()
+  })
+
+  it('does not touch the task it reads', () => {
+    applyCustomFieldChange(task, 'client', { mode: 'clear' })
     expect(task.customFields.client).toBe('Acme')
   })
 })

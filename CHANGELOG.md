@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The task name column in the table can now be resized
 - Select and multi-select custom fields can be changed straight from the table, like status and priority
+- The bar shown when several tasks are selected has a "Set property" button that sets or clears any custom property on all of them: pick from the options of a select, add values to a multi-select, set a person, a date, a checkbox, a number or text
 
 ### Fixed
 

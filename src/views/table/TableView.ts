@@ -1,7 +1,16 @@
 import { Notice, type KeymapEventHandler, type Scope } from 'obsidian'
 import { confirmDialog } from '#ui/ModalFactory'
 import type PMPlugin from '#main'
-import { t, tn, type TaskQuery, type Project, type SortRule, type ViewFields, shownFields } from '@dotpm/core'
+import {
+  t,
+  tn,
+  type TaskQuery,
+  type Project,
+  type SortRule,
+  type ViewFields,
+  applyCustomFieldChange,
+  shownFields
+} from '@dotpm/core'
 import type { ProjectScope } from '#store'
 import { safeAsync } from '@dotpm/ui'
 import type { SubView } from '../SubView'
@@ -164,6 +173,14 @@ export class TableView implements SubView {
           await this.bulkAddToArray(project, ids, 'tags', action.tag)
         }
         break
+      case 'set-custom': {
+        // A selection can span projects that don't all define the field; those are left alone.
+        if (!this.plugin.store.configFor(project).customFields.some((field) => field.id === action.fieldId)) break
+        await this.plugin.store.updateTasks(project, ids, (task) =>
+          applyCustomFieldChange(task, action.fieldId, action.change)
+        )
+        break
+      }
       case 'set-due-date':
         await this.plugin.store.updateTasks(project, ids, { due: action.due })
         for (const id of ids) {
