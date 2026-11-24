@@ -53,7 +53,7 @@ import {
   syncSortButton
 } from '@dotpm/ui'
 import { openProjectCreate } from '#ui/ModalFactory'
-import { KeyboardController, type ActionHandlers, type KeyboardSurface } from '#ui/keyboard/index'
+import { KeyboardController, askSavedView, type ActionHandlers, type KeyboardSurface } from '#ui/keyboard/index'
 import { projectListItems, renderProjectTable, type ProjectListContext } from './ProjectListRenderer'
 
 export const PM_DASHBOARD_VIEW_TYPE = 'pm-dashboard'
@@ -137,7 +137,15 @@ export class DashboardView extends ItemView {
         if (active) void safeAsync(() => this.plugin.router.openProjectEdit(active))()
       },
       new: () => openProjectCreate(this.plugin),
-      nextSavedView: () => this.cycleView(),
+      pickSavedView: () =>
+        askSavedView(this.plugin.app, {
+          views: this.plugin.settings.projectListViews,
+          activeId: this.state.activeViewId,
+          builtInName: t('header.allProjects'),
+          canSave: this.canSaveView(),
+          onSelect: (id) => this.selectView(id),
+          onSave: (name) => this.saveView(name, false)
+        }),
       expand: () => this.setActiveCollapsed(false),
       collapse: () => this.setActiveCollapsed(true),
       search: () => this.searchBox?.focus(),
@@ -708,12 +716,17 @@ export class DashboardView extends ItemView {
     this.changed()
   }
 
-  /** The next saved view in the list, and the built-in one after the last. */
-  private cycleView(): void {
+  /** False while nothing differs from the defaults, so there is nothing to save. */
+  private canSaveView(): boolean {
+    return !sameValue({ ...this.state, activeViewId: null }, makeDefaultProjectList())
+  }
+
+  private async saveView(name: string, isDefault: boolean): Promise<void> {
     const views = this.plugin.settings.projectListViews
-    if (!views.length) return
-    const at = views.findIndex((view) => view.id === this.state.activeViewId)
-    this.selectView(at === views.length - 1 ? null : views[at + 1].id)
+    const view = { ...this.snapshot(makeId(), name), ...(isDefault ? { isDefault: true } : {}) }
+    const rest = isDefault ? withDefault(views, null) : views
+    this.state.activeViewId = view.id
+    await this.persistViews([...rest, view])
   }
 
   private openSavedViews(anchor: HTMLElement): void {
@@ -722,16 +735,11 @@ export class DashboardView extends ItemView {
       views: views.map((view) => ({ id: view.id, name: view.name, isDefault: view.isDefault })),
       activeId: this.state.activeViewId,
       changes: this.viewChanges(),
-      canSave: !sameValue({ ...this.state, activeViewId: null }, makeDefaultProjectList()),
+      canSave: this.canSaveView(),
       storageNote: t('header.storedInSettings'),
       builtInName: t('header.allProjects'),
       onSelect: (id) => this.selectView(id),
-      onSave: async (name, isDefault) => {
-        const view = { ...this.snapshot(makeId(), name), ...(isDefault ? { isDefault: true } : {}) }
-        const rest = isDefault ? withDefault(views, null) : views
-        this.state.activeViewId = view.id
-        await this.persistViews([...rest, view])
-      },
+      onSave: (name, isDefault) => this.saveView(name, isDefault),
       onUpdate: () => this.updateActiveView(),
       onRevert: () => {
         const active = this.activeView()

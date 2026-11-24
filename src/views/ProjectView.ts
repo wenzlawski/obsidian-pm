@@ -103,7 +103,8 @@ import {
   taskActionHandlers,
   type ActionHandlers,
   type ActionSnapshot,
-  type KeyboardSurface
+  type KeyboardSurface,
+  askSavedView
 } from '#ui/keyboard/index'
 
 export const PM_PROJECT_VIEW_TYPE = 'pm-project'
@@ -257,7 +258,15 @@ export class ProjectView extends ItemView {
         const index = MODES.indexOf(this.currentView)
         this.switchMode(MODES[(index + 1) % MODES.length])
       },
-      nextSavedView: () => this.cycleSavedView(),
+      pickSavedView: () =>
+        askSavedView(this.app, {
+          views: this.savedViews(),
+          activeId: this.activeSavedViewId,
+          builtInName: t('header.allTasks'),
+          canSave: this.canSaveView(),
+          onSelect: (id) => this.handleSavedViewSelect(id),
+          onSave: (name) => this.handleSavedViewSave(name, false)
+        }),
       viewTable: () => this.switchMode('table'),
       viewBoard: () => this.switchMode('kanban'),
       viewTimeline: () => this.switchMode('gantt'),
@@ -835,6 +844,16 @@ export class ProjectView extends ItemView {
     })
   }
 
+  /** False while nothing differs from the defaults, so there is nothing to save. */
+  private canSaveView(): boolean {
+    return (
+      countActiveFilters(this.query.filter) > 0 ||
+      !sameValue(this.sort, makeDefaultSort()) ||
+      Object.keys(this.fields).length > 0 ||
+      this.currentView !== this.projectScope?.config.defaultView
+    )
+  }
+
   private openSavedViews(anchor: HTMLElement): void {
     const primary = this.projectScope?.primary
     openSavedViewsPopover(anchor, {
@@ -846,11 +865,7 @@ export class ProjectView extends ItemView {
       })),
       activeId: this.activeSavedViewId,
       changes: this.viewChanges(),
-      canSave:
-        countActiveFilters(this.query.filter) > 0 ||
-        !sameValue(this.sort, makeDefaultSort()) ||
-        Object.keys(this.fields).length > 0 ||
-        this.currentView !== this.projectScope?.config.defaultView,
+      canSave: this.canSaveView(),
       builtInName: t('header.allTasks'),
       storageNote:
         this.projectScope?.spec.kind === 'project' && primary
@@ -1461,14 +1476,6 @@ export class ProjectView extends ItemView {
     this.syncHeader()
     void this.persistFilter()
     this.refreshSubview()
-  }
-
-  /** The next saved view in the list, and the built-in one after the last. */
-  private cycleSavedView(): void {
-    const views = this.savedViews()
-    if (!views.length) return
-    const at = views.findIndex((view) => view.id === this.activeSavedViewId)
-    this.handleSavedViewSelect(at === views.length - 1 ? null : views[at + 1].id)
   }
 
   private handleSavedViewSelect(id: string | null): void {

@@ -78,11 +78,11 @@ describe('keymap', () => {
     expect(actionLabel('moveUp', 'table')).toBe('Move up')
   })
 
-  it('cycles the saved views on Shift+V where v cycles the view modes', () => {
+  it('picks a saved view on w', () => {
     for (const context of ['table', 'board', 'timeline', 'projects'] as const) {
-      expect(resolveAction(context, 'Shift+v')).toBe('nextSavedView')
+      expect(resolveAction(context, 'w')).toBe('pickSavedView')
     }
-    expect(resolveAction('table', 'v')).toBe('nextView')
+    expect(resolveAction('overview', 'w')).toBeNull()
   })
 
   it('resolves the punctuation aliases', () => {
