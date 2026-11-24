@@ -44,8 +44,16 @@ const sameList = (a: string[], b: string[]): boolean => a.length === b.length &&
  * a control of its own, such as a table cell or a bar of bulk actions. Nothing is committed
  * while a multiple choice is being made: the caller redraws once, when the picker closes,
  * instead of under the open popover.
+ *
+ * A trigger shows one picker at a time. Pressing it while its picker is open closes that
+ * picker, as pressing a toggle does, and returns null rather than opening another.
  */
-export function openOptionPicker(opts: OptionPickerOpts): Popover {
+export function openOptionPicker(opts: OptionPickerOpts): Popover | null {
+  const open = Popover.openOn(opts.anchor)
+  if (open) {
+    open.close()
+    return null
+  }
   let current = [...opts.selected]
   const partial = new Set(opts.mixed ?? [])
   // A value the list no longer offers stays pickable, so it can still be taken off.

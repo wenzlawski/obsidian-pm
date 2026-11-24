@@ -11,7 +11,6 @@ import {
 } from '@dotpm/core'
 import { formatBadgeText, isIconName } from './icons'
 import { Chip } from './primitives/Chip'
-import type { Popover } from './primitives/Popover'
 import { openOptionPicker } from './composites/properties/OptionPicker'
 import type { SelectItem } from './composites/properties/optionList'
 
@@ -40,13 +39,8 @@ export function priorityPickerItems(priorities: PriorityConfig[], iconSet: Prior
  * way a custom select is. Clicking the badge again closes the picker.
  */
 function pickOnClick(badge: Chip, items: SelectItem[], current: string, onChange: (id: string) => void): void {
-  let picker: Popover | null = null
   badge.onClick(() => {
-    if (picker?.isOpen) {
-      picker.close()
-      return
-    }
-    picker = openOptionPicker({
+    openOptionPicker({
       anchor: badge.el,
       options: items,
       selected: [current],

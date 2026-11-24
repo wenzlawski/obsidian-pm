@@ -156,4 +156,15 @@ describe('bulk tag picker', () => {
     expect(holding('wip')).toBe('all')
     expect(holding('ui')).toBe('none')
   })
+
+  it('closes when its button is pressed again, instead of opening a second picker', () => {
+    const anchor = document.body.createEl('button')
+    const ctx = makeCtx(['a', 'b'])
+    const apply = vi.fn<(change: TagChange) => void>()
+    openBulkTagPicker(ctx, anchor, apply)
+    row('idle').click()
+    openBulkTagPicker(ctx, anchor, apply)
+    expect(document.body.querySelectorAll('.pm-pop')).toHaveLength(0)
+    expect(apply).toHaveBeenCalledExactlyOnceWith({ add: ['idle'], remove: [] })
+  })
 })
