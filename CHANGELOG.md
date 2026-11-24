@@ -20,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Select and multi-select custom fields can be changed straight from the table, like status and priority
 - The bar shown when several tasks are selected has a "Set property" button that sets or clears any custom property on all of them: pick from the options of a select, add values to a multi-select, set a person, a date, a checkbox, a number or text
 - Tags of several selected tasks can be edited together: the bar's "Edit tags" shows each tag as on all, some or none of the tasks, and a click puts it on all of them or takes it off all of them, so one tag can go without clearing the rest. The `#` key offers "Add" and "Remove" for each tag too
+- The tasks stay selected after an action from the bulk bar, so several actions can go to the same set one after another. Clear the selection with the × on the bar or Escape. Tasks an action deletes or filters out leave the selection
 
 ### Fixed
 

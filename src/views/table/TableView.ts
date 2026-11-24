@@ -256,7 +256,9 @@ export class TableView implements SubView, KeyboardSurface {
           new Notice(tn('table.unarchivedTasks', ids.length))
           break
       }
-      this.state.selectedTaskIds.clear()
+      // The tasks stay selected so another action can go to the same set. What an action
+      // deleted, archived or filtered out drops from the selection when the table refreshes.
+      if (action.type === 'delete') this.state.selectedTaskIds.clear()
       await this.onRefresh()
     } catch (err) {
       console.error('Bulk action failed', err)
