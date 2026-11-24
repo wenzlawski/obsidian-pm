@@ -10,6 +10,7 @@ import {
   type ViewFields,
   applyCustomFieldChange,
   applyTagChange,
+  isCompact,
   isQueryActive,
   shownFields
 } from '@dotpm/core'
@@ -24,7 +25,8 @@ import {
   refreshTableBody,
   getVisibleTaskIds,
   updateSelectCheckboxes,
-  ROW_HEIGHT_ESTIMATE
+  ROW_HEIGHT_ESTIMATE,
+  COMPACT_ROW_HEIGHT_ESTIMATE
 } from './TableRenderer'
 import type { TableState } from './TableRenderer'
 import { updateSelectAllCheckbox, updateSelectedRow } from './TableRow'
@@ -55,7 +57,7 @@ export class TableView implements SubView, KeyboardSurface {
       tableBody: null,
       wrapper: null,
       visibleRows: [],
-      rowHeight: ROW_HEIGHT_ESTIMATE,
+      rowHeight: isCompact(fields, 'table') ? COMPACT_ROW_HEIGHT_ESTIMATE : ROW_HEIGHT_ESTIMATE,
       calibrating: false,
       resizeObserver: null,
       windowStart: -1,

@@ -3,6 +3,7 @@ import {
   dueUrgency,
   flattenTasks,
   getPriorityConfig,
+  isCompact,
   matchesQuery,
   shownFields,
   totalLoggedHours
@@ -66,6 +67,7 @@ function cardData(model: ViewModel, task: Task, fields: string[]): KanbanCardDat
 export function renderSnapshotKanban(container: HTMLElement, model: ViewModel): HTMLElement {
   const config = mergedConfig(model)
   container.addClass('pm-kanban-view')
+  if (isCompact(model.fields, 'kanban')) container.addClass('pm-kanban-view--compact')
   const board = container.createDiv('pm-kanban-board')
   const fields = shownFields(model.fields, 'kanban', fieldCatalogOf(model))
   const candidates = boardCandidates(allTasks(model), fields)

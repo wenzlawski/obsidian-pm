@@ -1,7 +1,7 @@
 import { type GanttWeekLabel, today } from '@dotpm/core'
 import { svgEl } from '#dom'
 import type { TimelineCfg } from './TimelineConfig'
-import { ROW_HEIGHT, HEADER_HEIGHT, dateToX, dayX, isHiddenDay } from './TimelineConfig'
+import { HEADER_HEIGHT, dateToX, dayX, isHiddenDay } from './TimelineConfig'
 
 /** The two SVG surfaces a gantt draws on and the timeline they share. */
 export interface GanttCanvas {
@@ -14,7 +14,7 @@ export interface GanttCanvas {
 export function renderGridLines(ctx: GanttCanvas, totalRows: number): void {
   const g = svgEl('g', { class: 'pm-gantt-grid' })
 
-  const totalHeight = HEADER_HEIGHT + totalRows * ROW_HEIGHT
+  const totalHeight = HEADER_HEIGHT + totalRows * ctx.cfg.rowHeight
   const { startDate, totalDays, dayWidth, granularity } = ctx.cfg
 
   for (let i = 0; i < totalDays; i++) {
@@ -57,7 +57,7 @@ export function renderGridLines(ctx: GanttCanvas, totalRows: number): void {
   }
 
   for (let r = 0; r <= totalRows; r++) {
-    const y = HEADER_HEIGHT + r * ROW_HEIGHT
+    const y = HEADER_HEIGHT + r * ctx.cfg.rowHeight
     g.appendChild(
       svgEl('line', {
         x1: 0,

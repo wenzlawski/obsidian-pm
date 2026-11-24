@@ -388,6 +388,20 @@ describe('project round-trip', () => {
     expect(project.savedViews[1].fields).toBeUndefined()
   })
 
+  it('reads which presentations a saved view draws compact', () => {
+    const fields = {
+      table: { visible: ['title'], compact: true },
+      kanban: { visible: ['tags'], compact: 'yes' },
+      gantt: { visible: ['title'], compact: false }
+    }
+    const project = hydrateProjectFromFrontmatter({ savedViews: [{ id: 'v1', name: 'F', fields }] }, '', 'P.md', 'P')
+    expect(project.savedViews[0].fields).toEqual({
+      table: { visible: ['title'], compact: true },
+      kanban: { visible: ['tags'] },
+      gantt: { visible: ['title'] }
+    })
+  })
+
   it('reads saved non-working days and drops anything but true', () => {
     const fm = {
       savedViews: [{ id: 'v1', name: 'D', nonWorkingDays: { weekends: true, holidays: 'yes', fridays: true } }]

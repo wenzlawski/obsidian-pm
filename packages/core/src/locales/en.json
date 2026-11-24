@@ -241,6 +241,7 @@
   "header.changedSort": "Sort",
   "header.columns": "Columns",
   "header.columnsBy": "Columns by",
+  "header.compact": "Compact view",
   "header.deleteView": "Delete view",
   "header.emptyColumn": "empty",
   "header.fields": "Fields",

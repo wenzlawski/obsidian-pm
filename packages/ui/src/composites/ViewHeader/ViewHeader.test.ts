@@ -755,6 +755,25 @@ describe('fields popover', () => {
     expect(labels()).toEqual(['Task'])
   })
 
+  it('turns compact on for one presentation at a time', () => {
+    const fields: ViewFields = {}
+    const onChange = open(fields)
+    const box = (): HTMLInputElement => document.body.find('.pm-fields-compact input') as HTMLInputElement
+    expect(box().checked).toBe(false)
+    box().checked = true
+    box().dispatchEvent(new Event('change'))
+    expect(fields.table?.compact).toBe(true)
+    expect(fields.kanban).toBeUndefined()
+    expect(onChange).toHaveBeenCalledTimes(1)
+    document.body.findAll('.pm-fields-tabs button')[1].click()
+    expect(box().checked).toBe(false)
+    document.body.findAll('.pm-fields-tabs button')[0].click()
+    expect(box().checked).toBe(true)
+    box().checked = false
+    box().dispatchEvent(new Event('change'))
+    expect(fields.table).toBeUndefined()
+  })
+
   it('switches to another presentation by its tab', () => {
     open({})
     document.body.findAll('.pm-fields-tabs button')[2].click()

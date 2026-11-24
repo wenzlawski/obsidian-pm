@@ -1,3 +1,4 @@
+import { Checkbox } from '#primitives/Checkbox'
 import { ChipButton } from '#primitives/ChipButton'
 import { Popover } from '#primitives/Popover'
 import { SegmentedControl } from '#primitives/SegmentedControl'
@@ -9,6 +10,7 @@ import {
   availableFields,
   columnWidth,
   hiddenFields,
+  isCompact,
   isLockedField,
   shownFields,
   t,
@@ -37,7 +39,7 @@ const tabs = (): { id: ViewMode; label: string }[] => [
 /**
  * Which fields each presentation shows and in what order, one tab per presentation: the
  * table's columns (with their widths), what a board card carries, and the text beside a
- * timeline bar.
+ * timeline bar. Each tab also says whether its presentation is drawn compact.
  */
 export function renderFieldsPanel(parent: HTMLElement, props: FieldsPopoverProps): void {
   const root = parent.createDiv('pm-fields-pop')
@@ -77,6 +79,7 @@ export function renderFieldsPanel(parent: HTMLElement, props: FieldsPopoverProps
     const shown = shownFields(fields, mode, catalog)
     const hidden = hiddenFields(fields, mode, catalog)
     const isTable = mode === 'table'
+
     renderVisibilityList(body, {
       rows: shown.map((id) => ({
         id,
@@ -112,7 +115,15 @@ export function renderFieldsPanel(parent: HTMLElement, props: FieldsPopoverProps
       })
     }
 
-    const foot = body.createDiv('pm-fields-foot pm-pop-section')
+    const compactRow = body.createEl('label', { cls: 'pm-group-row pm-fields-compact pm-pop-section' })
+    compactRow.createSpan({ cls: 'pm-group-label', text: t('header.compact') })
+    new Checkbox(compactRow).setChecked(isCompact(fields, mode)).onChange((checked) => {
+      if (checked) list().compact = true
+      else delete list().compact
+      changed()
+    })
+
+    const foot = body.createDiv('pm-fields-foot')
     if (isTable) {
       new ChipButton(foot)
         .setVariant('flat')

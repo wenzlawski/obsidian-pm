@@ -215,10 +215,14 @@ export interface GroupState {
   columns?: Record<string, GroupColumns>
 }
 
-/** Which fields one presentation shows, in order, and the widths in px the table's columns were dragged to. */
+/**
+ * How one presentation looks: which fields it shows, in order, the widths in px the table's
+ * columns were dragged to, and whether it is drawn tighter (`compact`).
+ */
 export interface FieldList {
   visible: string[]
   widths?: Record<string, number>
+  compact?: boolean
 }
 
 /** Per view mode. A mode left out shows its default fields. */

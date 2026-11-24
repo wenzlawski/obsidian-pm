@@ -11,9 +11,7 @@ import {
   drawRowHover,
   drawTaskBar,
   type GanttRow,
-  ROW_HEIGHT,
   HEADER_HEIGHT,
-  BAR_PADDING,
   BAR_BORDER_RADIUS,
   xToDate,
   getSnapPoints,
@@ -140,20 +138,21 @@ export function renderTaskBar(g: SVGGElement, task: Task, row: number, _depth: n
 function renderEmptyRowClickTarget(g: SVGGElement, task: Task, row: number, ctx: RendererContext): void {
   const project = ctx.scope.projectOf(task.id)
   if (!project) return
-  const rowY = HEADER_HEIGHT + row * ROW_HEIGHT
+  const { rowHeight, barPadding } = ctx.cfg
+  const rowY = HEADER_HEIGHT + row * rowHeight
 
   const hitArea = svgEl('rect', {
     x: 0,
     y: rowY,
     width: ctx.cfg.totalWidth,
-    height: ROW_HEIGHT,
+    height: rowHeight,
     fill: 'transparent',
     cursor: 'cell',
     class: 'pm-gantt-empty-row-hit'
   })
 
-  const previewY = rowY + BAR_PADDING
-  const previewH = ROW_HEIGHT - BAR_PADDING * 2
+  const previewY = rowY + barPadding
+  const previewH = rowHeight - barPadding * 2
   const previewW = Math.max(ctx.cfg.dayWidth, 8)
   const preview = svgEl('rect', {
     x: 0,
