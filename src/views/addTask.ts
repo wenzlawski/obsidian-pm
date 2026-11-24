@@ -30,7 +30,7 @@ export function openAddTask(plugin: PMPlugin, scope: ProjectScope, opts: AddTask
   }
   const primary = scope.primary
   if (!primary) return
-  const named = projectNamedByFilter(scope, opts.filter)
+  const named = projectNamedByFilter(plugin, scope, opts.filter)
   if (named) {
     open(named)
     return

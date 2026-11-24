@@ -416,6 +416,8 @@ export interface PMSettings {
   dateFormat: string
   saveTaskOnClose: boolean
   taskEditorSurface: 'modal' | 'tab'
+  /** A new task starts with the fields the view's filter pins to one value. */
+  prefillFromFilter: boolean
   /** Key shortcut to create or save tasks and projects. */
   editorSaveModifier: 'Shift' | 'Mod'
   /** Where a project link lands: its overview page or its tasks in the default view. */
@@ -518,6 +520,7 @@ export const DEFAULT_SETTINGS: PMSettings = {
   pullForwardOnEarlyFinish: false,
   saveTaskOnClose: true,
   taskEditorSurface: 'modal',
+  prefillFromFilter: true,
   editorSaveModifier: 'Shift',
   projectSurface: 'overview',
   projectFilters: {},

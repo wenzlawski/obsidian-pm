@@ -170,7 +170,7 @@ function openNew(ctx: TaskActionContext, parentId: string | null): void {
       onSave: ctx.refresh
     })
   }
-  const named = projectNamedByFilter(ctx.scope, filter)
+  const named = projectNamedByFilter(ctx.plugin, ctx.scope, filter)
   if (named || !ctx.scope.isMulti) {
     const project = named ?? ctx.scope.primary
     if (project) open(project)

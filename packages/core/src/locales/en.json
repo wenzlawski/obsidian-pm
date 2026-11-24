@@ -643,6 +643,8 @@
   "settings.peopleFolder.placeholder": "Whole vault",
   "settings.personCount.one": "{count} person",
   "settings.personCount.other": "{count} people",
+  "settings.prefillFromFilter.desc": "Start a new task with the values the view's filter is set to. A field the filter limits to one value, such as one status or one assignee, is filled in so the task shows up in the view.",
+  "settings.prefillFromFilter.name": "Prefill new tasks from the filter",
   "settings.priorities.add": "Add priority",
   "settings.priorities.desc": "Manage the labels, colors, and icons of task priorities.",
   "settings.priorities.empty": "No priorities.",

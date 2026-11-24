@@ -93,6 +93,12 @@ export class PMSettingTab extends PluginSettingTab {
             control: { type: 'toggle', key: 'saveTaskOnClose' }
           },
           {
+            name: t('settings.prefillFromFilter.name'),
+            desc: t('settings.prefillFromFilter.desc'),
+            aliases: ['filter', 'new task', 'default', 'add task'],
+            control: { type: 'toggle', key: 'prefillFromFilter' }
+          },
+          {
             name: t('settings.saveShortcut.name'),
             desc: t('settings.saveShortcut.desc'),
             aliases: ['hotkey', 'keyboard'],

@@ -1577,7 +1577,7 @@ export class ProjectView extends ItemView {
         }
       })
     }
-    const named = projectNamedByFilter(scope, this.query.filter)
+    const named = projectNamedByFilter(this.plugin, scope, this.query.filter)
     if (named || !scope.isMulti) {
       open(named ?? scope.primary)
       return

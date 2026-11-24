@@ -9,7 +9,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- A new task starts with the values the view's filter pins down. Filter for one status, priority, assignee, tag, type, project or custom property value and the task you add already has it, so it shows up in the view. It works for every field type, including custom properties. A filter with several values, an exclusion or a range leaves the field alone
+- A new task starts with the values the view's filter pins down. Filter for one status, priority, assignee, tag, type, project or custom property value and the task you add already has it, so it shows up in the view. It works for every field type, including custom properties. A filter with several values, an exclusion or a range leaves the field alone. Turn it off with "Prefill new tasks from the filter" in the plugin settings
 - A compact view for the table, board and timeline, turned on separately for each from the Fields popover. It tightens rows and cards so more fit on screen, and is saved with saved views and carried into exports
 - Subtasks can inherit tags and custom fields from the tasks above them, at any depth, chosen per tag and per property. Set the rules in the plugin settings, or override them per project. Inherited values show in the views, filters and search and in the task editor, and are never written into the task's note. See [Subtask inheritance](README.md#subtask-inheritance)
 - Rows in the table can be dragged above or below a sibling to put tasks in your own order, or moved with Alt+Up and Alt+Down. It works while the table has no sort, and the move can be undone
